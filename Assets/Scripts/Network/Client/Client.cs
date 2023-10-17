@@ -2,15 +2,13 @@ using System;
 using System.Net;
 using System.Text;
 using System.Net.Sockets;
+using UnityEngine;
 
-public class Client
+public class Client : MonoBehaviour
 {
     public Socket clientSocket { get; private set; }
-    public Socket serverSocket { get; set; }
 
-    public Client()
-    {
-    }
+    private string serverIP = "127.0.0.1";
 
     public Client(byte[] serverIP, int serverPort)
     {
