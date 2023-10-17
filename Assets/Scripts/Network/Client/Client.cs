@@ -1,8 +1,8 @@
-using System;
 using System.Net;
 using System.Text;
 using System.Net.Sockets;
 using System.Security;
+using UnityEngine;
 
 public class RemoteClient
 {
@@ -30,30 +30,38 @@ public class RemoteClient
 public class LocalClient
 {
     private Socket     clientSocket = null;
-    private IPEndPoint endPoint = null;
+    private IPEndPoint endPoint     = null;
+    public  bool       isConnected => clientSocket is not null && clientSocket.Connected;
 
     public LocalClient(byte[] serverIP, int serverPort)
     {
         endPoint     = new IPEndPoint(new IPAddress(serverIP), serverPort);
         clientSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        clientSocket.Blocking = false;
     }
 
-    public void Connect()
+    public bool Connect()
     {
+        if (isConnected) return true;
         try
         {
             clientSocket.Connect(endPoint);
+            return clientSocket.Connected;
         }
-        catch (Exception e) when (e is SocketException or SecurityException)
+        catch (SocketException)
         {
-            Console.WriteLine(e);
-            return;
+            return false;
+        }
+        catch (SecurityException e)
+        {
+            Debug.Log(e);
+            return false;
         }
     }
 
     public void Send(string data)
     {
-        if (clientSocket is null) return;
+        if (!isConnected) return;
         try
         {
             byte[] msg = Encoding.ASCII.GetBytes(data);
@@ -61,14 +69,14 @@ public class LocalClient
         }
         catch (SocketException e)
         {
-            Console.WriteLine(e);
+            Debug.Log(e);
             return;
         }
     }
 
     public string? Receive()
     {
-        if (clientSocket is null) return null;
+        if (!isConnected) return null;
         try
         {
             byte[] msg = new byte[1024];
@@ -77,7 +85,7 @@ public class LocalClient
         }
         catch (SocketException e)
         {
-            Console.WriteLine(e);
+            Debug.Log(e);
             return null;
         }
     }

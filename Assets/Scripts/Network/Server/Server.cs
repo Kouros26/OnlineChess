@@ -1,8 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Net.Sockets;
+using UnityEngine;
 
 public class Server
 {
@@ -40,7 +39,7 @@ public class Server
         }
         catch (SocketException e)
         {
-            Console.WriteLine(e);
+            Debug.Log(e);
             return;
         }
     }
@@ -56,7 +55,7 @@ public class Server
         }
         catch (SocketException e)
         {
-            Console.WriteLine(e);
+            Debug.Log(e);
             return null;
         }
     }
