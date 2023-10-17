@@ -22,12 +22,7 @@ public class Client : MonoBehaviour
 
     private void Update()
     {
-        while (!isConnected) {
-            if (clientSocket.Poll(100000, SelectMode.SelectWrite)) {
-                // The client was connected to the server.
-                break;
-            }
-        }
+        if (!isConnected) return;
         
         if (clientSocket.Poll(100000, SelectMode.SelectRead))
         {
