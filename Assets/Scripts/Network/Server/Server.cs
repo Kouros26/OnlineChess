@@ -11,7 +11,7 @@ public class Server : MonoBehaviour
 
     private List<Socket> clientSockets = new List<Socket>();
 
-    [SerializeField] private string serverIP = "127.0.0.1";
+    [SerializeField] private string serverIP = "192.168.56.1";
     [SerializeField] private int serverPort = 11000;
 
     public void Listen()
@@ -56,7 +56,6 @@ public class Server : MonoBehaviour
     {
         IPAddress ipAddress = IPAddress.Parse(serverIP);
         listenSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        listenSocket.Blocking = false;
         listenSocket.Bind(new IPEndPoint(ipAddress, serverPort));
         listenSocket.Listen(10);
     }
