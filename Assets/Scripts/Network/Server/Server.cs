@@ -3,18 +3,16 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Net.Sockets;
+using UnityEngine;
 
-public class Server
+public class Server : MonoBehaviour
 {
     private Socket listenSocket;
 
-    public Server(byte[] serverIP, int serverPort)
-    {
-        // Create the client socket and connect it to the server on the right port.
-        IPAddress ipAddress = new IPAddress(serverIP);
-        listenSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        listenSocket.Bind(new IPEndPoint(ipAddress, serverPort));
-    }
+    private List<Socket> clientSockets = new List<Socket>();
+
+    [SerializeField] private string serverIP = "127.0.0.1";
+    [SerializeField] private int serverPort = 11000;
 
     public void Listen()
     {
@@ -23,19 +21,27 @@ public class Server
 
     public Socket Accept()
     {
-        return listenSocket.Accept();
+        Socket newConnection = listenSocket.Accept();
+        newConnection.Blocking = false;
+        clientSockets.Add(newConnection);
+
+        return newConnection;
     }
 
-    public void Send(Client target, string data)
+    public void SendToAll(string data)
     {
         byte[] msg = Encoding.ASCII.GetBytes(data);
-        target.serverSocket.Send(msg);
+
+        foreach (var socket in clientSockets)
+        {
+            socket.Send(msg);
+        }
     }
 
-    public string Receive(Client source)
+    public string Receive(int id)
     {
-        byte[] bytes = new byte[1024];
-        int byteRec = source.serverSocket.Receive(bytes);
+        byte[] bytes = new byte[clientSockets[id].Available];
+        int byteRec = clientSockets[id].Receive(bytes);
 
         return Encoding.ASCII.GetString(bytes, 0, byteRec);
     }
@@ -44,5 +50,28 @@ public class Server
     {
         listenSocket.Shutdown(SocketShutdown.Both);
         listenSocket.Close();
+    }
+
+    void Awake()
+    {
+        IPAddress ipAddress = IPAddress.Parse(serverIP);
+        listenSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        listenSocket.Blocking = false;
+        listenSocket.Bind(new IPEndPoint(ipAddress, serverPort));
+        listenSocket.Listen(10);
+    }
+
+    void Start()
+    {
+
+    }
+
+    void Update()
+    {
+        if (listenSocket.Poll(100000, SelectMode.SelectRead))
+        {
+            Socket newConnection = Accept();
+            SendToAll("Hello");
+        }
     }
 }

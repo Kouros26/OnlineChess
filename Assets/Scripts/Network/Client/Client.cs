@@ -8,15 +8,8 @@ public class Client : MonoBehaviour
 {
     public Socket clientSocket { get; private set; }
 
-    private string serverIP = "127.0.0.1";
-
-    public Client(byte[] serverIP, int serverPort)
-    {
-        // Create the client socket and connect it to the server on the right port.
-        IPAddress ipAddress = new IPAddress(serverIP);
-        clientSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        clientSocket.Connect(new IPEndPoint(ipAddress, serverPort));
-    }
+    [SerializeField] private string serverIP = "127.0.0.1";
+    [SerializeField] private int serverPort = 11000;
 
     public void Send(string data)
     {
@@ -38,5 +31,29 @@ public class Client : MonoBehaviour
         if (clientSocket is null) return;
         clientSocket.Shutdown(SocketShutdown.Both);
         clientSocket.Close();
+    }
+
+    void Start()
+    {
+        IPAddress ipAddress = IPAddress.Parse(serverIP);
+        clientSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        clientSocket.Blocking = false;
+        clientSocket.Connect(new IPEndPoint(ipAddress, serverPort));
+    }
+
+    void Update()
+    {
+        if (!clientSocket.Connected)
+        {
+            IPAddress ipAddress = IPAddress.Parse(serverIP);
+            clientSocket.Connect(new IPEndPoint(ipAddress, serverPort));
+            return;
+        }
+
+
+        if (clientSocket.Poll(100000, SelectMode.SelectRead))
+        {
+            Debug.Log(Receive());
+        }
     }
 }
