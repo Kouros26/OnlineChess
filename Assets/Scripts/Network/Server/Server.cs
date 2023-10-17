@@ -1,41 +1,62 @@
+using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Net.Sockets;
 using UnityEngine;
 
-public class Server
+public class Server : MonoBehaviour
 {
-    private Socket     listenSocket = null;
-    public  IPEndPoint endPoint { get; } = null;
+    [SerializeField] private string serverIP   = "10.2.103.130";
+    [SerializeField] private int    serverPort = 11000;
+    
+    private Socket       listenSocket = null;
+    private List<Socket> clientSockets = new();
 
-    public Server(byte[] serverIP, int serverPort)
+    void Awake()
     {
-        endPoint     = new IPEndPoint(new IPAddress(serverIP), serverPort);
-        listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        listenSocket.Blocking = false;
-        listenSocket.Bind(endPoint);
+        IPAddress ipAddress = IPAddress.Parse(serverIP);
+        listenSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        listenSocket.Bind(new IPEndPoint(ipAddress, serverPort));
         listenSocket.Listen(10);
+    }
+
+    void Update()
+    {
+        if (listenSocket.Poll(100000, SelectMode.SelectRead))
+            Accept();
+
+        foreach (Socket socket in clientSockets)
+        {
+            if (socket.Poll(100000, SelectMode.SelectRead))
+            {
+                string data = Receive(socket);
+                Debug.Log(data);
+                Redistribute(socket, data);
+            }
+        }
     }
 
     public Socket Accept()
     {
         try {
-            Socket newRemote = listenSocket?.Accept();
-            if (newRemote is not null) newRemote.Blocking = true;
-            return newRemote;
+            Socket newSocket = listenSocket.Accept();
+            newSocket.Blocking = false;
+            clientSockets.Add(newSocket);
+            return newSocket;
         }
         catch (SocketException) {
             return null;
         }
     }
 
-    public void Send(RemoteClient target, string data)
+    public void Send(Socket target, string data)
     {
-        if (!target.isConnected) return;
+        if (target is null || !target.Connected) return;
         try
         {
             byte[] msg = Encoding.ASCII.GetBytes(data);
-            target.serverSocket.Send(msg);
+            target.Send(msg);
         }
         catch (SocketException e)
         {
@@ -43,14 +64,23 @@ public class Server
             return;
         }
     }
-
-    public string? Receive(RemoteClient source)
+    
+    public void Redistribute(Socket sender, string data)
     {
-        if (!source.isConnected) return null;
+        foreach (Socket socket in clientSockets)
+        {
+            if (socket == sender) continue;
+            Send(socket, data);
+        }
+    }
+
+    public string? Receive(Socket source)
+    {
+        if (source is null || !source.Connected) return null;
         try
         {
             byte[] bytes = new byte[1024];
-            int byteRec = source.serverSocket.Receive(bytes);
+            int byteRec = source.Receive(bytes);
             return Encoding.ASCII.GetString(bytes, 0, byteRec);
         }
         catch (SocketException e)

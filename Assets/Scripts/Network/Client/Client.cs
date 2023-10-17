@@ -1,61 +1,37 @@
+using System;
 using System.Net;
 using System.Text;
 using System.Net.Sockets;
 using System.Security;
 using UnityEngine;
 
-public class RemoteClient
+public class Client : MonoBehaviour
 {
-    protected Server server = null;
-    public    Socket serverSocket { get; protected set; } = null;
-    public    bool   isConnected => serverSocket is not null;
-
-    public RemoteClient(Server _server)
-    {
-        server = _server;
-    }
-
-    public bool Connect()
-    {
-        return isConnected || (serverSocket = server.Accept()) is not null;
-    }
-
-    public void Close()
-    {
-        serverSocket?.Close();
-        serverSocket = null;
-    }
-}
-
-public class LocalClient
-{
+    [SerializeField] private string serverIP   = "10.2.103.130";
+    [SerializeField] private int    serverPort = 11000;
+    
     private Socket     clientSocket = null;
-    private IPEndPoint endPoint     = null;
     public  bool       isConnected => clientSocket is not null && clientSocket.Connected;
 
-    public LocalClient(byte[] serverIP, int serverPort)
+    void Start()
     {
-        endPoint     = new IPEndPoint(new IPAddress(serverIP), serverPort);
-        clientSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        clientSocket.Blocking = false;
+        IPAddress ipAddress = IPAddress.Parse(serverIP);
+        clientSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        clientSocket.Connect(ipAddress, serverPort);
     }
 
-    public bool Connect()
+    private void Update()
     {
-        if (isConnected) return true;
-        try
-        {
-            clientSocket.Connect(endPoint);
-            return clientSocket.Connected;
+        while (!isConnected) {
+            if (clientSocket.Poll(100000, SelectMode.SelectWrite)) {
+                // The client was connected to the server.
+                break;
+            }
         }
-        catch (SocketException)
+        
+        if (clientSocket.Poll(100000, SelectMode.SelectRead))
         {
-            return false;
-        }
-        catch (SecurityException e)
-        {
-            Debug.Log(e);
-            return false;
+            Debug.Log(Receive());
         }
     }
 
