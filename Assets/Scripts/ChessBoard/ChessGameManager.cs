@@ -295,9 +295,14 @@ public partial class ChessGameManager : MonoBehaviour
             Debug.Log(s);
             string[] splitMove = s.Split(':');
             if (splitMove[0] == "castle")
-                boardState.TryExecuteCastling(int.Parse(splitMove[1]), int.Parse(splitMove[2]) == 1, false);
+            {
+                Move move = new Move(int.Parse(splitMove[1]), int.Parse(splitMove[2])).Mirror();
+                boardState.TryExecuteCastling(move, int.Parse(splitMove[3]), false);
+            }
             else
+            {
                 PlayTurn(new Move(Array.ConvertAll(splitMove, int.Parse)).Mirror(), false);
+            }
             UpdatePieces();
         };
         
