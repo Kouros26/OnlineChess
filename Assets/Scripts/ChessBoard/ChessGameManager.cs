@@ -175,7 +175,7 @@ public partial class ChessGameManager : MonoBehaviour
         // Begin game
         boardState.Reset();
 
-        teamTurn = EChessTeam.White;
+        teamTurn = FindObjectsOfType<Server>().Length > 0 ? EChessTeam.White : EChessTeam.Black;
         if (scores == null)
         {
             scores = new List<uint>();
@@ -287,7 +287,8 @@ public partial class ChessGameManager : MonoBehaviour
     void Start()
     {
         client = FindObjectOfType<Client>();
-        client.receiveCallback = s => { PlayTurn(new Move(Array.ConvertAll(s.Split(':'), e => int.Parse(e))).Mirror(), false); UpdatePieces(); };
+        client.receiveCallback = s => { Debug.Log(s); PlayTurn(new Move(Array.ConvertAll(s.Split(':'), e => int.Parse(e))).Mirror(), false); UpdatePieces(); };
+        
 
         pieceLayerMask = 1 << LayerMask.NameToLayer("Piece");
         boardLayerMask = 1 << LayerMask.NameToLayer("Board");

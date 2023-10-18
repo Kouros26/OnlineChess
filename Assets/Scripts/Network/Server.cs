@@ -55,7 +55,6 @@ public class Server : MonoBehaviour
                 Debug.Log(newPacket.GetLatency());
 
                 Redistribute(socket, data);
-                Send(socket, data);
             }
         }
     }
