@@ -13,7 +13,6 @@ public class Client : MonoBehaviour
     private Socket    clientSocket = null;
     private IPAddress ipAddress    = null;
     public  bool      isConnected => clientSocket is not null && clientSocket.Connected;
-    // private float     pollTimer    = 0;
     public  Action<string> receiveCallback = null;
 
     void Start()
@@ -68,8 +67,14 @@ public class Client : MonoBehaviour
             byte[] msg = new byte[1024];
             int byteCount = clientSocket.Receive(msg);
             string data = Encoding.ASCII.GetString(msg, 0, byteCount);
-            if (receiveCallback is not null)
+            if (data == "shutdown") {
+                Close();
+                clientSocket = null;
+                return null;
+            }
+            if (receiveCallback is not null) {
                 receiveCallback(data);
+            }
             return data;
         }
         catch (SocketException e)

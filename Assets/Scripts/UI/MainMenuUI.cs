@@ -16,14 +16,18 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameObject serverPrefab;
     
     private TextMeshProUGUI hostButtonText;
+    private TextMeshProUGUI startButtonText;
     
     private Server server = null;
     private Client client = null;
+    private bool   canStart = false;
     
     void Start()
     {
         client = FindObjectOfType<Client>();
-        hostButtonText = hostButton.GetComponentInChildren<TextMeshProUGUI>();
+        client.receiveCallback = s => { if (canStart) Start(); else canStart = true; };
+        hostButtonText  = hostButton .GetComponentInChildren<TextMeshProUGUI>();
+        startButtonText = startButton.GetComponentInChildren<TextMeshProUGUI>();
         hostButton .onClick.AddListener(Host);
         joinButton .onClick.AddListener(Join);
         startButton.onClick.AddListener(StartGame);
@@ -73,6 +77,13 @@ public class MainMenuUI : MonoBehaviour
     {
         if (!client.isConnected) return;
         if (server is not null && server.connectionCount < 2) return;
-        SceneManager.LoadScene("MainScene");
+        if (canStart) {
+            SceneManager.LoadScene("MainScene");
+        }
+        else {
+            client.Send("ready");
+            startButtonText.text = "Waiting for opponent";
+            startButton.interactable = false;
+        }
     }
 }

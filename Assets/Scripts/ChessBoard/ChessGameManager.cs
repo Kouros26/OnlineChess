@@ -109,6 +109,20 @@ public partial class ChessGameManager : MonoBehaviour
             }
         }
 
+        public Move Mirror()
+        {
+            int fromRow = 7 - from / 8;
+            int fromCol = 7 - from % 8;
+            int toRow   = 7 - to   / 8;
+            int toCol   = 7 - to   % 8;
+            
+            Move mirror = new Move(
+                fromRow * 8 + fromCol,
+                toRow   * 8 + toCol
+            );
+            return mirror;
+        }
+
         public override bool Equals(object o)
         {
             try
@@ -126,12 +140,12 @@ public partial class ChessGameManager : MonoBehaviour
             return from + to;
         }
 
-        public static bool operator ==(Move move1, Move move2)
+        public static bool operator==(Move move1, Move move2)
         {
             return move1.from == move2.from && move1.to == move2.to;
         }
 
-        public static bool operator !=(Move move1, Move move2)
+        public static bool operator!=(Move move1, Move move2)
         {
             return move1.from != move2.from || move1.to != move2.to;
         }
@@ -158,7 +172,7 @@ public partial class ChessGameManager : MonoBehaviour
     {
         chessAI = ChessAI.Instance;
 
-        // Start game
+        // Begin game
         boardState.Reset();
 
         teamTurn = EChessTeam.White;
@@ -183,7 +197,7 @@ public partial class ChessGameManager : MonoBehaviour
             BoardState.EMoveResult result = boardState.PlayUnsafeMove(move);
             if (isPlayer)
             {
-                client.Send(move.from + ":" + move.from);
+                client.Send(move.from + ":" + move.to);
             }
 
             if (result == BoardState.EMoveResult.Promotion)
@@ -273,7 +287,7 @@ public partial class ChessGameManager : MonoBehaviour
     void Start()
     {
         client = FindObjectOfType<Client>();
-        client.receiveCallback = s => { PlayTurn(new Move(Array.ConvertAll(s.Split(':'), int.Parse)), false); };
+        client.receiveCallback = s => { PlayTurn(new Move(Array.ConvertAll(s.Split(':'), e => int.Parse(e))).Mirror(), false); UpdatePieces(); };
 
         pieceLayerMask = 1 << LayerMask.NameToLayer("Piece");
         boardLayerMask = 1 << LayerMask.NameToLayer("Board");
@@ -402,10 +416,10 @@ public partial class ChessGameManager : MonoBehaviour
 
     void UpdateAITurn()
     {
-        Move move = chessAI.ComputeMove();
-        PlayTurn(move);
+        // Move move = chessAI.ComputeMove();
+        // PlayTurn(move);
 
-        UpdatePieces();
+        // UpdatePieces();
     }
 
     void UpdatePlayerTurn()
