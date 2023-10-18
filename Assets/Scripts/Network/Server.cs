@@ -55,6 +55,7 @@ public class Server : MonoBehaviour
                 Debug.Log(newPacket.GetLatency());
 
                 Redistribute(socket, data);
+                Send(socket, data);
             }
         }
     }
@@ -121,6 +122,8 @@ public class Server : MonoBehaviour
 
     public void Close()
     {
+        foreach (Socket socket in clientSockets)
+            Send(socket, "shutdown");
         listenSocket?.Close();
         listenSocket = null;
     }

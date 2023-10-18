@@ -13,7 +13,6 @@ public class Client : MonoBehaviour
     private Socket    clientSocket = null;
     private IPAddress ipAddress    = null;
     public  bool      isConnected => clientSocket is not null && clientSocket.Connected;
-    // private float     pollTimer    = 0;
     public  Action<string> receiveCallback = null;
 
     void Start()
