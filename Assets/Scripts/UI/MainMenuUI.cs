@@ -81,6 +81,8 @@ public class MainMenuUI : MonoBehaviour
     private void StartGame()
     {
         if (!client.isConnected) return;
+        SceneManager.LoadScene("MainScene");
+        return;
         if (server is not null && server.connectionCount < 2) return;
         client.Send("ready");
         if (canStart) {

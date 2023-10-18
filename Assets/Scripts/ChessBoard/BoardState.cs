@@ -332,7 +332,7 @@ public partial class ChessGameManager
             return EMoveResult.Normal;
         }
 
-        private bool TryExecuteCastling(int moveToIndex, bool isShortCastling)
+        public bool TryExecuteCastling(int moveToIndex, bool isShortCastling, bool isPlayer = true)
         {
             int kingSquareIndex = isShortCastling ? (moveToIndex - 1) : moveToIndex + 1;
             int kingFinalSquareIndex = isShortCastling ? (moveToIndex + 1) : moveToIndex - 1;
@@ -349,6 +349,12 @@ public partial class ChessGameManager
                 else
                     isBlackCastlingDone = true;
 
+                if (isPlayer)
+                {
+                    Client client  = FindObjectOfType<Client>();
+                    string message = "castle:" + moveToIndex + ":" + (isShortCastling ? "1" : "0");
+                    client.SendDelayed(message, 0.1f);
+                }
                 return true;
             }
 
@@ -378,7 +384,7 @@ public partial class ChessGameManager
             squares[index] = square;
         }
 
-        public void Reset()
+        public void Reset(bool isPlayingBlacks)
         {
             isWhiteCastlingDone = false;
             isBlackCastlingDone = false;
@@ -404,7 +410,6 @@ public partial class ChessGameManager
                 }
             }
             
-            bool isPlayingBlack = FindObjectsOfType<Server>().Length <= 0;
 
              // White
             for (int i = BOARD_SIZE; i < BOARD_SIZE*2; ++i)
@@ -412,12 +417,12 @@ public partial class ChessGameManager
                 SetPieceAtSquare(i, EChessTeam.White, EPieceType.Pawn);
             }
             SetPieceAtSquare(0, EChessTeam.White, EPieceType.Rook);
-            SetPieceAtSquare(1, EChessTeam.White, EPieceType.Knight);
-            SetPieceAtSquare(2, EChessTeam.White, EPieceType.Bishop);
-            SetPieceAtSquare(isPlayingBlack ? 4 : 3, EChessTeam.White, EPieceType.Queen);
-            SetPieceAtSquare(isPlayingBlack ? 3 : 4, EChessTeam.White, EPieceType.King);
-            SetPieceAtSquare(5, EChessTeam.White, EPieceType.Bishop);
-            SetPieceAtSquare(6, EChessTeam.White, EPieceType.Knight);
+            // SetPieceAtSquare(1, EChessTeam.White, EPieceType.Knight);
+            // SetPieceAtSquare(2, EChessTeam.White, EPieceType.Bishop);
+            // SetPieceAtSquare(isPlayingBlacks ? 4 : 3, EChessTeam.White, EPieceType.Queen);
+            SetPieceAtSquare(isPlayingBlacks ? 3 : 4, EChessTeam.White, EPieceType.King);
+            // SetPieceAtSquare(5, EChessTeam.White, EPieceType.Bishop);
+            // SetPieceAtSquare(6, EChessTeam.White, EPieceType.Knight);
             SetPieceAtSquare(7, EChessTeam.White, EPieceType.Rook);
 
             // Black
@@ -429,8 +434,8 @@ public partial class ChessGameManager
             SetPieceAtSquare(startIndex, EChessTeam.Black, EPieceType.Rook);
             SetPieceAtSquare(startIndex + 1, EChessTeam.Black, EPieceType.Knight);
             SetPieceAtSquare(startIndex + 2, EChessTeam.Black, EPieceType.Bishop);
-            SetPieceAtSquare(startIndex + (isPlayingBlack ? 4 : 3), EChessTeam.Black, EPieceType.Queen);
-            SetPieceAtSquare(startIndex + (isPlayingBlack ? 3 : 4), EChessTeam.Black, EPieceType.King);
+            SetPieceAtSquare(startIndex + (isPlayingBlacks ? 4 : 3), EChessTeam.Black, EPieceType.Queen);
+            SetPieceAtSquare(startIndex + (isPlayingBlacks ? 3 : 4), EChessTeam.Black, EPieceType.King);
             SetPieceAtSquare(startIndex + 5, EChessTeam.Black, EPieceType.Bishop);
             SetPieceAtSquare(startIndex + 6, EChessTeam.Black, EPieceType.Knight);
             SetPieceAtSquare(startIndex + 7, EChessTeam.Black, EPieceType.Rook);
