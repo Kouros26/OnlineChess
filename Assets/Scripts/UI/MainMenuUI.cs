@@ -12,7 +12,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button joinButton;
     [SerializeField] private Button startButton;
     [SerializeField] private TMP_InputField addressInput;
-    [SerializeField] private TextMeshProUGUI connectedPopup;
+    [SerializeField] private TextMeshProUGUI popup;
     [SerializeField] private GameObject serverPrefab;
     
     private TextMeshProUGUI hostButtonText;
@@ -31,7 +31,9 @@ public class MainMenuUI : MonoBehaviour
 
     private void Update()
     {
-        connectedPopup.enabled = server is null && client.isConnected;
+        popup.enabled = server is not null || (server is null && client.isConnected);
+        if (server is not null)
+            popup.text = server.connectionCount + " player" + (server.connectionCount > 1 ? "s" : "") + " connected!";
     }
 
     private void Host()
@@ -64,12 +66,13 @@ public class MainMenuUI : MonoBehaviour
         if (server is not null) Destroy(server.gameObject);
         client.serverIP = address;
         client.Connect();
+        popup.text = "Connected to server!";
     }
 
     private void StartGame()
     {
         if (!client.isConnected) return;
-        if (server is not null && server.connectionCount > 2) return;
+        if (server is not null && server.connectionCount < 2) return;
         SceneManager.LoadScene("MainScene");
     }
 }

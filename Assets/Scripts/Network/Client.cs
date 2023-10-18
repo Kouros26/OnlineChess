@@ -11,8 +11,9 @@ public class Client : MonoBehaviour
     [SerializeField] public int    serverPort = 11000;
     
     private Socket    clientSocket = null;
-    private IPAddress ipAddress = null;
+    private IPAddress ipAddress    = null;
     public  bool      isConnected => clientSocket is not null && clientSocket.Connected;
+    // private float     pollTimer    = 0;
     public  Action<string> receiveCallback = null;
 
     void Start()
@@ -24,8 +25,8 @@ public class Client : MonoBehaviour
     private void Update()
     {
         if (!isConnected) return;
-
-        if (clientSocket.Poll(100000, SelectMode.SelectRead))
+        
+        if (clientSocket.Poll(100, SelectMode.SelectRead))
             Receive();
     }
 

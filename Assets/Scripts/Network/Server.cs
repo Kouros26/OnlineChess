@@ -40,12 +40,12 @@ public class Server : MonoBehaviour
 
     void Update()
     {
-        if (listenSocket.Poll(100000, SelectMode.SelectRead))
+        if (listenSocket.Poll(100, SelectMode.SelectRead))
             Accept();
 
         foreach (Socket socket in clientSockets)
         {
-            if (socket.Poll(100000, SelectMode.SelectRead))
+            if (socket.Poll(100, SelectMode.SelectRead))
             {
                 byte[] data = Receive(socket);
                 Packet newPacket = new Packet();
