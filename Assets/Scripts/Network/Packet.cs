@@ -3,112 +3,97 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using UnityEditor.VersionControl;
 using UnityEngine;
 
 public class Packet
 {
-    private Header header;
+    private int packetSize;
 
-    private string message;
+    private char[] message = new char[60];
 
     private int moveFrom;
     private int moveTo;
 
-    private DateTime utcTimeStamp;
+    private float latency;
+    private DateTime utcTimeStamp = new DateTime();
 
-    Packet(string message)
+    public Packet()
     {
-        this.message = message;
 
-        utcTimeStamp = DateTime.UtcNow;
-
-        int messageSize = message.Length * sizeof(char);
-        int moveInfoSize = sizeof(int);
-        int timeStampSize = Marshal.SizeOf(utcTimeStamp);
-
-        header = new Header
-        {
-            padding = new int[] { messageSize, moveInfoSize, moveInfoSize, timeStampSize }
-        };
-
-        utcTimeStamp = DateTime.UtcNow;
-        header.packetSize = Marshal.SizeOf(this);
     }
 
-    Packet(int moveFrom, int moveTo)
+    public Packet(string message)
+    {
+        this.message = message.ToCharArray();
+
+        utcTimeStamp = DateTime.UtcNow; // Used to evaluate size
+        packetSize = message.Length * sizeof(char) + sizeof(int) * 2 + sizeof(float) + sizeof;
+    }
+
+    public Packet(int moveFrom, int moveTo)
     {
         this.moveFrom = moveFrom;
         this.moveTo = moveTo;
 
-        utcTimeStamp = DateTime.UtcNow;
-
-        int messageSize = IntPtr.Size; // Used to determinate size of null string
-        int moveInfoSize = sizeof(int);
-        int timeStampSize = Marshal.SizeOf(utcTimeStamp);
-
-        header = new Header
-        {
-            padding = new int[] { messageSize, moveInfoSize, moveInfoSize, timeStampSize }
-        };
-
-        utcTimeStamp = DateTime.UtcNow;
-        header.packetSize = Marshal.SizeOf(this);
+        utcTimeStamp = DateTime.UtcNow; // Used to evaluate size
+        packetSize = Marshal.SizeOf(this);
     }
 
-    byte[] Serialize()
+    public byte[] Serialize()
     {
-        byte[] packetSize = BitConverter.GetBytes(header.packetSize);
+        utcTimeStamp = DateTime.UtcNow;
+        byte[] data = new byte[packetSize];
+        GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+        Marshal.StructureToPtr(this, handle.AddrOfPinnedObject(), false);
+        handle.Free();
 
-        byte[] padding = new byte[header.padding.Length * sizeof(int)];
-
-        for (int i = 0; i < header.padding.Length; i++)
-        {
-            byte[] value = BitConverter.GetBytes(header.padding[i]);
-
-            if (BitConverter.IsLittleEndian)
-                Array.Reverse(value);
-
-            Buffer.BlockCopy(value, 0, padding, value.Length * i, value.Length);
-        }
-
-        byte[] message = Encoding.ASCII.GetBytes(this.message);
-        byte[] moveFrom = BitConverter.GetBytes(this.moveFrom);
-        byte[] moveTo = BitConverter.GetBytes(this.moveTo);
-        byte[] dateTimeBytes = BitConverter.GetBytes(utcTimeStamp.Ticks);
-
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(packetSize);
-            Array.Reverse(message);
-            Array.Reverse(moveFrom);
-            Array.Reverse(moveTo);
-            Array.Reverse(dateTimeBytes);
-        }
-
-        byte[] final = new byte[packetSize.Length + padding.Length + message.Length + moveFrom.Length + moveTo.Length + dateTimeBytes.Length];
-        Buffer.BlockCopy(packetSize, 0, final, 0, packetSize.Length);
-        Buffer.BlockCopy(padding, 0, final, 
-                packetSize.Length, padding.Length);
-        Buffer.BlockCopy(message, 0, final,
-                packetSize.Length + padding.Length, message.Length);
-        Buffer.BlockCopy(moveFrom, 0, final,
-                packetSize.Length + padding.Length + message.Length, moveFrom.Length);
-        Buffer.BlockCopy(moveTo, 0, final,
-                packetSize.Length + padding.Length + message.Length + moveFrom.Length, moveTo.Length);
-        Buffer.BlockCopy(dateTimeBytes, 0, final,
-                packetSize.Length + padding.Length + message.Length + moveFrom.Length + moveTo.Length, dateTimeBytes.Length);
-
-        return final;
+        return data;
     }
 
-    void Deserialize(byte[] data)
+    public void Deserialize(byte[] data)
     {
+        GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+        Packet tempPacket = (Packet)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Packet));
+        handle.Free();
 
+        packetSize = tempPacket.packetSize;
+        message = tempPacket.message;
+        moveFrom = tempPacket.moveFrom;
+        moveTo = tempPacket.moveTo;
+        utcTimeStamp = tempPacket.utcTimeStamp;
+        
+        DateTime now = DateTime.Now;
+        latency = (float)(now - utcTimeStamp).TotalMilliseconds;
     }
-}
 
-public struct Header
-{
-    public int packetSize;
-    public int[] padding;
+    public int GetSize()
+    {
+        return packetSize;
+    }
+
+    public char[] GetMessage()
+    {
+        return message;
+    }
+
+    public int GetFrom()
+    {
+        return moveFrom;
+    }
+
+    public int GetTo()
+    {
+        return moveTo;
+    }
+
+    public float GetLatency()
+    {
+        return latency;
+    }
+
+    public DateTime GetTimeStamp()
+    {
+        return utcTimeStamp;
+    }
 }

@@ -24,19 +24,21 @@ public class Client : MonoBehaviour
     {
         if (!isConnected) return;
         
+        Packet packet = new Packet("hello");
+        Send(packet);
+
         if (clientSocket.Poll(100000, SelectMode.SelectRead))
         {
             Debug.Log(Receive());
         }
     }
 
-    public void Send(string data)
+    public void Send(Packet packet)
     {
         if (!isConnected) return;
         try
         {
-            byte[] msg = Encoding.ASCII.GetBytes(data);
-            clientSocket.Send(msg);
+            clientSocket.Send(packet.Serialize());
         }
         catch (SocketException e)
         {
@@ -45,14 +47,20 @@ public class Client : MonoBehaviour
         }
     }
 
-    public string? Receive()
+    public Packet Receive()
     {
         if (!isConnected) return null;
         try
         {
-            byte[] msg = new byte[1024];
-            int byteCount = clientSocket.Receive(msg);
-            return Encoding.ASCII.GetString(msg, 0, byteCount);
+            byte[] data = new byte[clientSocket.Available];
+            Packet newPacket = new Packet();
+            int byteCount = clientSocket.Receive(data);
+            newPacket.Deserialize(data);
+            Debug.Log(newPacket.GetMessage());
+            Debug.Log(newPacket.GetLatency());
+            Debug.Log(newPacket.GetTimeStamp());
+
+            return newPacket;
         }
         catch (SocketException e)
         {
