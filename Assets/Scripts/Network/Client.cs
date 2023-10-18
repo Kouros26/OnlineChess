@@ -59,12 +59,12 @@ public class Client : MonoBehaviour
         }
     }
 
-    public void SendDelayed(string data, float delay)
+    public void SendDelayed(Packet data, float delay)
     {
         StartCoroutine(SendDelayedCoroutine(data, delay));
     }
 
-    private IEnumerator SendDelayedCoroutine(string data, float delay)
+    private IEnumerator SendDelayedCoroutine(Packet data, float delay)
     {
         yield return new WaitForSeconds(delay);
         Send(data);
@@ -81,7 +81,7 @@ public class Client : MonoBehaviour
             newPacket.Deserialize(data);
 
             if (receiveCallback is not null)
-                receiveCallback(newPacket.GetMessage());
+                receiveCallback(new string(newPacket.GetMessage()));
 
             return newPacket;
         }

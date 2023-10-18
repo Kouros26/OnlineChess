@@ -45,12 +45,12 @@ public class Server : MonoBehaviour
 
         foreach (Socket socket in clientSockets)
         {
-            if (socket.Poll(100, SelectMode.SelectRead))
+            if (socket.Poll(10000, SelectMode.SelectRead))
             {
                 byte[] data = Receive(socket);
                 Packet newPacket = new Packet();
                 newPacket.Deserialize(data);
-                Debug.Log(newPacket.GetMessage().ToString());
+                Debug.Log(new string(newPacket.GetMessage()));
                 Debug.Log(newPacket.GetTimeStamp());
                 Debug.Log(newPacket.GetLatency());
 
@@ -121,8 +121,8 @@ public class Server : MonoBehaviour
 
     public void Close()
     {
-        foreach (Socket socket in clientSockets)
-            Send(socket, "shutdown");
+        //foreach (Socket socket in clientSockets)
+        //    Send(socket, "shutdown");
         listenSocket?.Close();
         listenSocket = null;
     }

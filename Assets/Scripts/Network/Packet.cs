@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization;
 using System.Text;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 [Serializable]
@@ -75,29 +74,12 @@ public class Packet
     public int GetFrom()
     {
         return moveFrom;
-                packetSize.Length, padding.Length);
-        Buffer.BlockCopy(message, 0, final,
-    public int GetTo()
-        Buffer.BlockCopy(moveFrom, 0, final,
-        return moveTo;
     }
 
     public float GetLatency()
     {
         return latency;
     }
-        Buffer.BlockCopy(dateTimeBytes, 0, final,
-                packetSize.Length + padding.Length + message.Length + moveFrom.Length + moveTo.Length, dateTimeBytes.Length);
-
-        return final;
-    }
-
-    void Deserialize(byte[] data)
-    {
-
-    }
-}
-
     public DateTime GetTimeStamp()
     {
         return utcTimeStamp;
