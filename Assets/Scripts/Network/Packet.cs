@@ -37,10 +37,6 @@ public class Packet
 
         utcTimeStamp = DateTime.UtcNow; // Used to evaluate size
     }
-        byte[] data = new byte[packetSize];
-        GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-        Marshal.StructureToPtr(this, handle.AddrOfPinnedObject(), false);
-        handle.Free();
 
     public byte[] Serialize()
     {

@@ -48,6 +48,12 @@ public class Server : MonoBehaviour
             if (socket.Poll(100, SelectMode.SelectRead))
             {
                 byte[] data = Receive(socket);
+                Packet newPacket = new Packet();
+                newPacket.Deserialize(data);
+                Debug.Log(newPacket.GetMessage().ToString());
+                Debug.Log(newPacket.GetTimeStamp());
+                Debug.Log(newPacket.GetLatency());
+
                 Redistribute(socket, data);
             }
         }
