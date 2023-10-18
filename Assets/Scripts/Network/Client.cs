@@ -18,6 +18,7 @@ public class Client : MonoBehaviour
     void Start()
     {
         receiveCallback = Debug.Log;
+        DontDestroyOnLoad(gameObject);
     }
 
     private void Update()
