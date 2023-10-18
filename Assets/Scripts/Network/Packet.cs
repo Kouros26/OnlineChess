@@ -58,12 +58,23 @@ public class Packet
     byte[] Serialize()
     {
         byte[] packetSize = BitConverter.GetBytes(header.packetSize);
+
         byte[] padding = new byte[header.padding.Length * sizeof(int)];
-        Buffer.BlockCopy(header.padding, 0, padding, 0, padding.Length);
+
+        for (int i = 0; i < header.padding.Length; i++)
+        {
+            byte[] value = BitConverter.GetBytes(header.padding[i]);
+
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(value);
+
+            Buffer.BlockCopy(value, 0, padding, value.Length * i, value.Length);
+        }
 
         byte[] message = Encoding.ASCII.GetBytes(this.message);
         byte[] moveFrom = BitConverter.GetBytes(this.moveFrom);
         byte[] moveTo = BitConverter.GetBytes(this.moveTo);
+        byte[] dateTimeBytes = BitConverter.GetBytes(utcTimeStamp.Ticks);
 
         if (BitConverter.IsLittleEndian)
         {
@@ -71,8 +82,23 @@ public class Packet
             Array.Reverse(message);
             Array.Reverse(moveFrom);
             Array.Reverse(moveTo);
+            Array.Reverse(dateTimeBytes);
         }
 
+        byte[] final = new byte[packetSize.Length + padding.Length + message.Length + moveFrom.Length + moveTo.Length + dateTimeBytes.Length];
+        Buffer.BlockCopy(packetSize, 0, final, 0, packetSize.Length);
+        Buffer.BlockCopy(padding, 0, final, 
+                packetSize.Length, padding.Length);
+        Buffer.BlockCopy(message, 0, final,
+                packetSize.Length + padding.Length, message.Length);
+        Buffer.BlockCopy(moveFrom, 0, final,
+                packetSize.Length + padding.Length + message.Length, moveFrom.Length);
+        Buffer.BlockCopy(moveTo, 0, final,
+                packetSize.Length + padding.Length + message.Length + moveFrom.Length, moveTo.Length);
+        Buffer.BlockCopy(dateTimeBytes, 0, final,
+                packetSize.Length + padding.Length + message.Length + moveFrom.Length + moveTo.Length, dateTimeBytes.Length);
+
+        return final;
     }
 
     void Deserialize(byte[] data)
@@ -86,4 +112,3 @@ public struct Header
     public int packetSize;
     public int[] padding;
 }
-
