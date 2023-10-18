@@ -317,14 +317,14 @@ public partial class ChessGameManager
                 if ((destSquare.team == EChessTeam.White && move.from == (BOARD_SIZE - 1) && move.to == 5) // white line
                  || (destSquare.team == EChessTeam.Black && move.from == (squares.Count - 1) && move.to == squares.Count - 3)) // black line
                 {
-                    if (TryExecuteCastling(move.to, true))
+                    if (TryExecuteCastling(new Move(move.to - 1, move.to + 1), move.to))
                         return EMoveResult.Castling_Short;
                 }
                 // long castling case
                 if ((destSquare.team == EChessTeam.White && move.from == 0 && move.to == 3) // white line
                 || (destSquare.team == EChessTeam.Black && move.from == (squares.Count - 8) && move.to == squares.Count - 5)) // black line
                 {
-                    if (TryExecuteCastling(move.to, false))
+                    if (TryExecuteCastling(new Move(move.to + 1, move.to - 1), move.to))
                         return EMoveResult.Castling_Long;
                 }
             }
@@ -332,19 +332,17 @@ public partial class ChessGameManager
             return EMoveResult.Normal;
         }
 
-        public bool TryExecuteCastling(int moveToIndex, bool isShortCastling, bool isPlayer = true)
+        public bool TryExecuteCastling(Move move, int rookSquareIndex, bool isPlayer = true)
         {
-            int kingSquareIndex = isShortCastling ? (moveToIndex - 1) : moveToIndex + 1;
-            int kingFinalSquareIndex = isShortCastling ? (moveToIndex + 1) : moveToIndex - 1;
-            BoardSquare destSquare = squares[moveToIndex];
-            BoardSquare kingSquare = squares[kingSquareIndex];
-            if (kingSquare.piece == EPieceType.King && kingSquare.team == destSquare.team)
+            BoardSquare rookSquare = squares[rookSquareIndex];
+            BoardSquare kingSquare = squares[move.from];
+            if (kingSquare.piece == EPieceType.King && kingSquare.team == rookSquare.team)
             {
                 BoardSquare tempSquare = kingSquare; // king square to be moved
-                squares[kingSquareIndex] = BoardSquare.Empty(); // replace by empty square
-                squares[kingFinalSquareIndex] = tempSquare;
+                squares[move.from] = BoardSquare.Empty(); // replace by empty square
+                squares[move.to] = tempSquare;
 
-                if (destSquare.team == EChessTeam.White)
+                if (rookSquare.team == EChessTeam.White)
                     isWhiteCastlingDone = true;
                 else
                     isBlackCastlingDone = true;
@@ -352,7 +350,7 @@ public partial class ChessGameManager
                 if (isPlayer)
                 {
                     Client client  = FindObjectOfType<Client>();
-                    string message = "castle:" + moveToIndex + ":" + (isShortCastling ? "1" : "0");
+                    string message = "castle:" + move.from + ":" + move.to + ":" + rookSquareIndex;
                     client.SendDelayed(message, 0.1f);
                 }
                 return true;
