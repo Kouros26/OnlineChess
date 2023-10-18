@@ -417,12 +417,12 @@ public partial class ChessGameManager
                 SetPieceAtSquare(i, EChessTeam.White, EPieceType.Pawn);
             }
             SetPieceAtSquare(0, EChessTeam.White, EPieceType.Rook);
-            // SetPieceAtSquare(1, EChessTeam.White, EPieceType.Knight);
-            // SetPieceAtSquare(2, EChessTeam.White, EPieceType.Bishop);
-            // SetPieceAtSquare(isPlayingBlacks ? 4 : 3, EChessTeam.White, EPieceType.Queen);
+            SetPieceAtSquare(1, EChessTeam.White, EPieceType.Knight);
+            SetPieceAtSquare(2, EChessTeam.White, EPieceType.Bishop);
+            SetPieceAtSquare(isPlayingBlacks ? 4 : 3, EChessTeam.White, EPieceType.Queen);
             SetPieceAtSquare(isPlayingBlacks ? 3 : 4, EChessTeam.White, EPieceType.King);
-            // SetPieceAtSquare(5, EChessTeam.White, EPieceType.Bishop);
-            // SetPieceAtSquare(6, EChessTeam.White, EPieceType.Knight);
+            SetPieceAtSquare(5, EChessTeam.White, EPieceType.Bishop);
+            SetPieceAtSquare(6, EChessTeam.White, EPieceType.Knight);
             SetPieceAtSquare(7, EChessTeam.White, EPieceType.Rook);
 
             // Black
