@@ -82,7 +82,7 @@ public class MainMenuUI : MonoBehaviour
     {
         if (!client.isConnected) return;
         if (server is not null && server.connectionCount < 2) return;
-        client.Send("ready");
+        client.Send(new Packet("ready"));
         if (canStart) {
             SceneManager.LoadScene("MainScene");
         }

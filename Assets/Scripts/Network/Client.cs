@@ -45,13 +45,12 @@ public class Client : MonoBehaviour
         Close();
     }
 
-    public void Send(string data)
+    public void Send(Packet packet)
     {
         if (!isConnected) return;
         try
         {
-            byte[] msg = Encoding.ASCII.GetBytes(data);
-            clientSocket.Send(msg);
+            clientSocket.Send(packet.Serialize());
         }
         catch (SocketException e)
         {
@@ -60,34 +59,31 @@ public class Client : MonoBehaviour
         }
     }
 
-    public void SendDelayed(string data, float delay)
+    public void SendDelayed(Packet data, float delay)
     {
         StartCoroutine(SendDelayedCoroutine(data, delay));
     }
 
-    private IEnumerator SendDelayedCoroutine(string data, float delay)
+    private IEnumerator SendDelayedCoroutine(Packet data, float delay)
     {
         yield return new WaitForSeconds(delay);
         Send(data);
     }
 
-    public string? Receive()
+    public Packet Receive()
     {
         if (!isConnected) return null;
         try
         {
-            byte[] msg = new byte[1024];
-            int byteCount = clientSocket.Receive(msg);
-            string data = Encoding.ASCII.GetString(msg, 0, byteCount);
-            if (data == "shutdown") {
-                Close();
-                clientSocket = null;
-                return null;
-            }
-            if (receiveCallback is not null) {
-                receiveCallback(data);
-            }
-            return data;
+            byte[] data = new byte[clientSocket.Available];
+            Packet newPacket = new Packet();
+            int byteCount = clientSocket.Receive(data);
+            newPacket.Deserialize(data);
+
+            if (receiveCallback is not null)
+                receiveCallback(new string(newPacket.GetMessage()));
+
+            return newPacket;
         }
         catch (SocketException e)
         {

@@ -200,7 +200,8 @@ public partial class ChessGameManager : MonoBehaviour
         {
             BoardState.EMoveResult result = boardState.PlayUnsafeMove(move);
             if (isPlayer) {
-                client.Send(move.from + ":" + move.to);
+                Packet packet = new Packet(new(move.from + ":" + move.to));
+                client.Send(packet);
             }
 
             if (result == BoardState.EMoveResult.Promotion)

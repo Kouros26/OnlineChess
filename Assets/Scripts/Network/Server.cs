@@ -47,8 +47,13 @@ public class Server : MonoBehaviour
         {
             if (socket.Poll(100, SelectMode.SelectRead))
             {
-                string data = Receive(socket);
-                Debug.Log(data);
+                byte[] data = Receive(socket);
+                Packet newPacket = new Packet();
+                newPacket.Deserialize(data);
+                Debug.Log(new string(newPacket.GetMessage()));
+                Debug.Log(newPacket.GetTimeStamp());
+                Debug.Log(newPacket.GetLatency());
+
                 Redistribute(socket, data);
             }
         }
@@ -72,13 +77,12 @@ public class Server : MonoBehaviour
         }
     }
 
-    public void Send(Socket target, string data)
+    public void Send(Socket target, byte[] data)
     {
         if (target is null || !target.Connected) return;
         try
         {
-            byte[] msg = Encoding.ASCII.GetBytes(data);
-            target.Send(msg);
+            target.Send(data);
         }
         catch (SocketException e)
         {
@@ -87,23 +91,26 @@ public class Server : MonoBehaviour
         }
     }
     
-    public void Redistribute(Socket sender, string data)
+    public void Redistribute(Socket sender, byte[] data)
     {
         foreach (Socket socket in clientSockets)
         {
-            if (socket == sender) continue;
+            if (socket == sender) 
+                continue;
+
             Send(socket, data);
         }
     }
 
-    public string? Receive(Socket source)
+    public byte[] Receive(Socket source)
     {
         if (source is null || !source.Connected) return null;
         try
         {
-            byte[] bytes = new byte[1024];
+            byte[] bytes = new byte[source.Available];
             int byteRec = source.Receive(bytes);
-            return Encoding.ASCII.GetString(bytes, 0, byteRec);
+
+            return bytes;
         }
         catch (SocketException e)
         {
@@ -114,8 +121,8 @@ public class Server : MonoBehaviour
 
     public void Close()
     {
-        foreach (Socket socket in clientSockets)
-            Send(socket, "shutdown");
+        //foreach (Socket socket in clientSockets)
+        //    Send(socket, "shutdown");
         listenSocket?.Close();
         listenSocket = null;
     }
