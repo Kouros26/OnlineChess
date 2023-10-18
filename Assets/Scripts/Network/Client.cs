@@ -7,17 +7,17 @@ using UnityEngine;
 
 public class Client : MonoBehaviour
 {
-    [SerializeField] private string serverIP   = "10.2.103.130";
-    [SerializeField] private int    serverPort = 11000;
+    [SerializeField] public string serverIP   = "10.2.103.130";
+    [SerializeField] public int    serverPort = 11000;
     
-    private Socket     clientSocket = null;
-    public  bool       isConnected => clientSocket is not null && clientSocket.Connected;
+    private Socket    clientSocket = null;
+    private IPAddress ipAddress = null;
+    public  bool      isConnected => clientSocket is not null && clientSocket.Connected;
+    public  Action<string> receiveCallback = null;
 
     void Start()
     {
-        IPAddress ipAddress = IPAddress.Parse(serverIP);
-        clientSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        clientSocket.Connect(ipAddress, serverPort);
+        receiveCallback = Debug.Log;
     }
 
     private void Update()
@@ -25,9 +25,22 @@ public class Client : MonoBehaviour
         if (!isConnected) return;
         
         if (clientSocket.Poll(100000, SelectMode.SelectRead))
-        {
-            Debug.Log(Receive());
-        }
+            Receive();
+    }
+
+    public void Connect()
+    {
+        if (isConnected) Close();
+        else clientSocket?.Close();
+        
+        ipAddress    = IPAddress.Parse(serverIP);
+        clientSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        clientSocket.Connect(ipAddress, serverPort);
+    }
+
+    private void OnDestroy()
+    {
+        Close();
     }
 
     public void Send(string data)
@@ -52,7 +65,10 @@ public class Client : MonoBehaviour
         {
             byte[] msg = new byte[1024];
             int byteCount = clientSocket.Receive(msg);
-            return Encoding.ASCII.GetString(msg, 0, byteCount);
+            string data = Encoding.ASCII.GetString(msg, 0, byteCount);
+            if (receiveCallback is not null)
+                receiveCallback(data);
+            return data;
         }
         catch (SocketException e)
         {

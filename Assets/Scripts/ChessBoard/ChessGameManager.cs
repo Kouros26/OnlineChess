@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 
 /*
@@ -32,6 +33,7 @@ public partial class ChessGameManager : MonoBehaviour
     private static int BOARD_SIZE = 8;
     private int pieceLayerMask;
     private int boardLayerMask;
+    private Client client;
 
     #region Enums
     public enum EPieceType : uint
@@ -86,6 +88,26 @@ public partial class ChessGameManager : MonoBehaviour
     {
         public int from;
         public int to;
+
+        public Move(int _from, int _to)
+        {
+            from = _from;
+            to   = _to;
+        }
+
+        public Move(int[] fromTo)
+        {
+            if (fromTo.Length != 2)
+            {
+                from = -1;
+                to   = -1;
+            }
+            else
+            {
+                from = fromTo[0];
+                to   = fromTo[1];
+            }
+        }
 
         public override bool Equals(object o)
         {
@@ -154,11 +176,16 @@ public partial class ChessGameManager : MonoBehaviour
         }
     }
 
-    public void PlayTurn(Move move)
+    public void PlayTurn(Move move, bool isPlayer = true)
     {
         if (boardState.IsValidMove(teamTurn, move))
         {
             BoardState.EMoveResult result = boardState.PlayUnsafeMove(move);
+            if (isPlayer)
+            {
+                client.Send(move.from + ":" + move.from);
+            }
+
             if (result == BoardState.EMoveResult.Promotion)
             {
                 // instantiate promoted queen gameobject
@@ -183,8 +210,7 @@ public partial class ChessGameManager : MonoBehaviour
                 teamTurn = otherTeam;
             }
             // raise event
-            if (OnPlayerTurn != null)
-                OnPlayerTurn(teamTurn == EChessTeam.White);
+            OnPlayerTurn?.Invoke(teamTurn == EChessTeam.White);
         }
     }
 
@@ -246,6 +272,9 @@ public partial class ChessGameManager : MonoBehaviour
 
     void Start()
     {
+        client = FindObjectOfType<Client>();
+        client.receiveCallback = s => { PlayTurn(new Move(Array.ConvertAll(s.Split(':'), int.Parse)), false); };
+
         pieceLayerMask = 1 << LayerMask.NameToLayer("Piece");
         boardLayerMask = 1 << LayerMask.NameToLayer("Board");
 
