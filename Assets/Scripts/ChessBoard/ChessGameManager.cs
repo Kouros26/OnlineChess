@@ -33,7 +33,11 @@ public partial class ChessGameManager : MonoBehaviour
     private static int BOARD_SIZE = 8;
     private int pieceLayerMask;
     private int boardLayerMask;
+    
+    [SerializeField] private Material whitesMaterial;
+    [SerializeField] private Material blacksMaterial;
     private Client client;
+    private bool isPlayingBlacks = false;
 
     #region Enums
     public enum EPieceType : uint
@@ -173,9 +177,9 @@ public partial class ChessGameManager : MonoBehaviour
         chessAI = ChessAI.Instance;
 
         // Begin game
-        boardState.Reset();
+        boardState.Reset(isPlayingBlacks);
 
-        teamTurn = FindObjectsOfType<Server>().Length > 0 ? EChessTeam.White : EChessTeam.Black;
+        teamTurn = isPlayingBlacks ? EChessTeam.Black : EChessTeam.White;
         if (scores == null)
         {
             scores = new List<uint>();
@@ -195,8 +199,7 @@ public partial class ChessGameManager : MonoBehaviour
         if (boardState.IsValidMove(teamTurn, move))
         {
             BoardState.EMoveResult result = boardState.PlayUnsafeMove(move);
-            if (isPlayer)
-            {
+            if (isPlayer) {
                 client.Send(move.from + ":" + move.to);
             }
 
@@ -287,8 +290,18 @@ public partial class ChessGameManager : MonoBehaviour
     void Start()
     {
         client = FindObjectOfType<Client>();
-        client.receiveCallback = s => { Debug.Log(s); PlayTurn(new Move(Array.ConvertAll(s.Split(':'), e => int.Parse(e))).Mirror(), false); UpdatePieces(); };
+        client.receiveCallback = s =>
+        {
+            Debug.Log(s);
+            string[] splitMove = s.Split(':');
+            if (splitMove[0] == "castle")
+                boardState.TryExecuteCastling(int.Parse(splitMove[1]), int.Parse(splitMove[2]) == 1, false);
+            else
+                PlayTurn(new Move(Array.ConvertAll(splitMove, int.Parse)).Mirror(), false);
+            UpdatePieces();
+        };
         
+        isPlayingBlacks = FindObjectsOfType<Server>().Length <= 0;
 
         pieceLayerMask = 1 << LayerMask.NameToLayer("Piece");
         boardLayerMask = 1 << LayerMask.NameToLayer("Board");
@@ -371,7 +384,11 @@ public partial class ChessGameManager : MonoBehaviour
         int crtPos = 0;
         foreach (BoardSquare square in boardState.squares)
         {
-            crtTeamPrefabs = (square.team == EChessTeam.White) ? whitePiecesPrefab : blackPiecesPrefab;
+            if (square.team == EChessTeam.White)
+                crtTeamPrefabs = isPlayingBlacks ? blackPiecesPrefab : whitePiecesPrefab;
+            else
+                crtTeamPrefabs = isPlayingBlacks ? whitePiecesPrefab : blackPiecesPrefab;
+            
             if (square.piece != EPieceType.None)
             {
                 GameObject crtPiece = Instantiate(crtTeamPrefabs[(uint)square.piece]);

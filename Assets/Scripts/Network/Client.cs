@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Net;
 using System.Text;
 using System.Net.Sockets;
@@ -56,6 +57,17 @@ public class Client : MonoBehaviour
             Debug.Log(e);
             return;
         }
+    }
+
+    public void SendDelayed(string data, float delay)
+    {
+        StartCoroutine(SendDelayedCoroutine(data, delay));
+    }
+
+    private IEnumerator SendDelayedCoroutine(string data, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Send(data);
     }
 
     public Packet Receive()
