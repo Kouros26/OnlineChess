@@ -403,6 +403,8 @@ public partial class ChessGameManager
                     SetPieceAtSquare(i, EChessTeam.None, EPieceType.None);
                 }
             }
+            
+            bool isPlayingBlack = FindObjectsOfType<Server>().Length <= 0;
 
              // White
             for (int i = BOARD_SIZE; i < BOARD_SIZE*2; ++i)
@@ -412,8 +414,8 @@ public partial class ChessGameManager
             SetPieceAtSquare(0, EChessTeam.White, EPieceType.Rook);
             SetPieceAtSquare(1, EChessTeam.White, EPieceType.Knight);
             SetPieceAtSquare(2, EChessTeam.White, EPieceType.Bishop);
-            SetPieceAtSquare(3, EChessTeam.White, EPieceType.Queen);
-            SetPieceAtSquare(4, EChessTeam.White, EPieceType.King);
+            SetPieceAtSquare(isPlayingBlack ? 4 : 3, EChessTeam.White, EPieceType.Queen);
+            SetPieceAtSquare(isPlayingBlack ? 3 : 4, EChessTeam.White, EPieceType.King);
             SetPieceAtSquare(5, EChessTeam.White, EPieceType.Bishop);
             SetPieceAtSquare(6, EChessTeam.White, EPieceType.Knight);
             SetPieceAtSquare(7, EChessTeam.White, EPieceType.Rook);
@@ -427,8 +429,8 @@ public partial class ChessGameManager
             SetPieceAtSquare(startIndex, EChessTeam.Black, EPieceType.Rook);
             SetPieceAtSquare(startIndex + 1, EChessTeam.Black, EPieceType.Knight);
             SetPieceAtSquare(startIndex + 2, EChessTeam.Black, EPieceType.Bishop);
-            SetPieceAtSquare(startIndex + 3, EChessTeam.Black, EPieceType.Queen);
-            SetPieceAtSquare(startIndex + 4, EChessTeam.Black, EPieceType.King);
+            SetPieceAtSquare(startIndex + (isPlayingBlack ? 4 : 3), EChessTeam.Black, EPieceType.Queen);
+            SetPieceAtSquare(startIndex + (isPlayingBlack ? 3 : 4), EChessTeam.Black, EPieceType.King);
             SetPieceAtSquare(startIndex + 5, EChessTeam.Black, EPieceType.Bishop);
             SetPieceAtSquare(startIndex + 6, EChessTeam.Black, EPieceType.Knight);
             SetPieceAtSquare(startIndex + 7, EChessTeam.Black, EPieceType.Rook);
