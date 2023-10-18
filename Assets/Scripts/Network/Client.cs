@@ -18,14 +18,15 @@ public class Client : MonoBehaviour
         IPAddress ipAddress = IPAddress.Parse(serverIP);
         clientSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         clientSocket.Connect(ipAddress, serverPort);
+
+        Packet newPacket = new Packet("Hello there !");
+        byte[] data = newPacket.Serialize();
+        Send(newPacket);
     }
 
     private void Update()
     {
         if (!isConnected) return;
-        
-        Packet packet = new Packet("hello");
-        Send(packet);
 
         if (clientSocket.Poll(100000, SelectMode.SelectRead))
         {
@@ -56,9 +57,6 @@ public class Client : MonoBehaviour
             Packet newPacket = new Packet();
             int byteCount = clientSocket.Receive(data);
             newPacket.Deserialize(data);
-            Debug.Log(newPacket.GetMessage());
-            Debug.Log(newPacket.GetLatency());
-            Debug.Log(newPacket.GetTimeStamp());
 
             return newPacket;
         }

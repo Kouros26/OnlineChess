@@ -1,15 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
 using System.Text;
 using UnityEditor.VersionControl;
 using UnityEngine;
 
+[Serializable]
 public class Packet
 {
-    private int packetSize;
-
     private char[] message = new char[60];
 
     private int moveFrom;
@@ -26,9 +28,6 @@ public class Packet
     public Packet(string message)
     {
         this.message = message.ToCharArray();
-
-        utcTimeStamp = DateTime.UtcNow; // Used to evaluate size
-        packetSize = message.Length * sizeof(char) + sizeof(int) * 2 + sizeof(float) + sizeof;
     }
 
     public Packet(int moveFrom, int moveTo)
@@ -37,39 +36,35 @@ public class Packet
         this.moveTo = moveTo;
 
         utcTimeStamp = DateTime.UtcNow; // Used to evaluate size
-        packetSize = Marshal.SizeOf(this);
     }
 
     public byte[] Serialize()
     {
         utcTimeStamp = DateTime.UtcNow;
-        byte[] data = new byte[packetSize];
-        GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-        Marshal.StructureToPtr(this, handle.AddrOfPinnedObject(), false);
-        handle.Free();
 
-        return data;
+        using (MemoryStream stream = new MemoryStream())
+        {
+            IFormatter formatter = new BinaryFormatter();
+            formatter.Serialize(stream, this);
+            return stream.ToArray();
+        }
     }
 
     public void Deserialize(byte[] data)
     {
-        GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-        Packet tempPacket = (Packet)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(Packet));
-        handle.Free();
+        using (MemoryStream stream = new MemoryStream(data))
+        {
+            IFormatter formatter = new BinaryFormatter();
+            Packet tempPacket = (Packet)formatter.Deserialize(stream);
 
-        packetSize = tempPacket.packetSize;
-        message = tempPacket.message;
-        moveFrom = tempPacket.moveFrom;
-        moveTo = tempPacket.moveTo;
-        utcTimeStamp = tempPacket.utcTimeStamp;
-        
-        DateTime now = DateTime.Now;
+            message = tempPacket.message;
+            moveFrom = tempPacket.moveFrom;
+            moveTo = tempPacket.moveTo;
+            utcTimeStamp = tempPacket.utcTimeStamp;
+        }
+
+        DateTime now = DateTime.UtcNow;
         latency = (float)(now - utcTimeStamp).TotalMilliseconds;
-    }
-
-    public int GetSize()
-    {
-        return packetSize;
     }
 
     public char[] GetMessage()
