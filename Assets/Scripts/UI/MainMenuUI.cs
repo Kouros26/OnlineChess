@@ -25,7 +25,12 @@ public class MainMenuUI : MonoBehaviour
     void Start()
     {
         client = FindObjectOfType<Client>();
-        client.receiveCallback = s => { if (canStart) Start(); else canStart = true; };
+        client.receiveCallback = s =>
+        {
+            if (s != "ready") return; 
+            if (canStart) StartGame();
+            else canStart = true;
+        };
         hostButtonText  = hostButton .GetComponentInChildren<TextMeshProUGUI>();
         startButtonText = startButton.GetComponentInChildren<TextMeshProUGUI>();
         hostButton .onClick.AddListener(Host);
@@ -77,11 +82,12 @@ public class MainMenuUI : MonoBehaviour
     {
         if (!client.isConnected) return;
         if (server is not null && server.connectionCount < 2) return;
+        client.Send("ready");
         if (canStart) {
             SceneManager.LoadScene("MainScene");
         }
         else {
-            client.Send("ready");
+            canStart = true;
             startButtonText.text = "Waiting for opponent";
             startButton.interactable = false;
         }

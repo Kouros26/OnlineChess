@@ -50,7 +50,6 @@ public class Server : MonoBehaviour
                 string data = Receive(socket);
                 Debug.Log(data);
                 Redistribute(socket, data);
-                Send(socket, data);
             }
         }
     }
