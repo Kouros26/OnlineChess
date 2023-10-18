@@ -7,17 +7,32 @@ using UnityEngine;
 
 public class Server : MonoBehaviour
 {
-    [SerializeField] private string serverIP   = "10.2.103.130";
-    [SerializeField] private int    serverPort = 11000;
+    [SerializeField] private int serverPort = 11000;
+    private IPAddress serverIP;
     
     private Socket       listenSocket = null;
     private List<Socket> clientSockets = new();
+    
+    public int connectionCount => clientSockets.Count;
 
+    public int    GetPort()    { return serverPort; }
+    public string GetAddress() { return serverIP.ToString(); }
+    
     void Awake()
     {
-        IPAddress ipAddress = IPAddress.Parse(serverIP);
-        listenSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        listenSocket.Bind(new IPEndPoint(ipAddress, serverPort));
+        // Find an available LAN IP address.
+        IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
+        foreach (IPAddress ip in host.AddressList)
+        {
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
+            {
+                serverIP = ip;
+            }
+        }
+        
+        // Open the server on that address.
+        listenSocket = new Socket(serverIP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        listenSocket.Bind(new IPEndPoint(serverIP, serverPort));
         listenSocket.Listen(10);
     }
 
@@ -40,6 +55,11 @@ public class Server : MonoBehaviour
                 Redistribute(socket, data);
             }
         }
+    }
+
+    private void OnDestroy()
+    {
+        Close();
     }
 
     public Socket Accept()
