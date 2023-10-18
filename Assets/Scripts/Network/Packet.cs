@@ -37,6 +37,10 @@ public class Packet
 
         utcTimeStamp = DateTime.UtcNow; // Used to evaluate size
     }
+        byte[] data = new byte[packetSize];
+        GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+        Marshal.StructureToPtr(this, handle.AddrOfPinnedObject(), false);
+        handle.Free();
 
     public byte[] Serialize()
     {
@@ -75,10 +79,10 @@ public class Packet
     public int GetFrom()
     {
         return moveFrom;
-    }
-
+                packetSize.Length, padding.Length);
+        Buffer.BlockCopy(message, 0, final,
     public int GetTo()
-    {
+        Buffer.BlockCopy(moveFrom, 0, final,
         return moveTo;
     }
 
@@ -86,6 +90,17 @@ public class Packet
     {
         return latency;
     }
+        Buffer.BlockCopy(dateTimeBytes, 0, final,
+                packetSize.Length + padding.Length + message.Length + moveFrom.Length + moveTo.Length, dateTimeBytes.Length);
+
+        return final;
+    }
+
+    void Deserialize(byte[] data)
+    {
+
+    }
+}
 
     public DateTime GetTimeStamp()
     {
