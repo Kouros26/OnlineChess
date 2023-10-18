@@ -86,7 +86,8 @@ public class Client : MonoBehaviour
 
     public void Close()
     {
-        clientSocket?.Shutdown(SocketShutdown.Both);
+        if (clientSocket is not null && clientSocket.Connected) 
+            clientSocket.Shutdown(SocketShutdown.Both);
         clientSocket?.Close();
         clientSocket = null;
     }
