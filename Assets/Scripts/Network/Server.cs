@@ -20,6 +20,8 @@ public class Server : MonoBehaviour
     
     void Awake()
     {
+        DontDestroyOnLoad(gameObject);
+        
         // Find an available LAN IP address.
         IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
         foreach (IPAddress ip in host.AddressList)
