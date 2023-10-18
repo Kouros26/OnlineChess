@@ -297,7 +297,8 @@ public partial class ChessGameManager : MonoBehaviour
             if (splitMove[0] == "castle")
             {
                 Move move = new Move(int.Parse(splitMove[1]), int.Parse(splitMove[2])).Mirror();
-                boardState.TryExecuteCastling(move, int.Parse(splitMove[3]), false);
+                Move rook = new Move(-1, int.Parse(splitMove[3])).Mirror();
+                boardState.TryExecuteCastling(move, rook.to, false);
             }
             else
             {
