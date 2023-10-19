@@ -47,12 +47,15 @@ public class Server : MonoBehaviour
         {
             if (socket.Poll(100, SelectMode.SelectRead))
             {
+                if (socket.Available <= 0) {
+                    socket.Close();
+                    clientSockets.Remove(socket);
+                    return;
+                }
+                
                 byte[] data = Receive(socket);
                 Packet newPacket = new Packet();
                 newPacket.Deserialize(data);
-                Debug.Log(newPacket.GetMessage());
-                Debug.Log(newPacket.GetTimeStamp());
-                Debug.Log(newPacket.GetLatency());
 
                 Redistribute(socket, data);
             }
@@ -108,8 +111,7 @@ public class Server : MonoBehaviour
         try
         {
             byte[] bytes = new byte[source.Available];
-            int byteRec = source.Receive(bytes);
-
+            source.Receive(bytes);
             return bytes;
         }
         catch (SocketException e)

@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 /*
  * This singleton manages the whole chess game
@@ -36,6 +37,7 @@ public partial class ChessGameManager : MonoBehaviour
     
     [SerializeField] private Material whitesMaterial;
     [SerializeField] private Material blacksMaterial;
+    [SerializeField] private ColorPicker colorPicker;
     private Client client;
     private bool isPlayingBlacks = false;
 
@@ -200,7 +202,8 @@ public partial class ChessGameManager : MonoBehaviour
         {
             BoardState.EMoveResult result = boardState.PlayUnsafeMove(move);
             if (isPlayer) {
-                Packet packet = new Packet(new(move.from + ":" + move.to));
+                string message = move.from + ":" + move.to;
+                Packet packet  = new Packet(Packet.Type.Move, message);
                 client.Send(packet);
             }
 
@@ -293,23 +296,38 @@ public partial class ChessGameManager : MonoBehaviour
         client = FindObjectOfType<Client>();
         client.receiveCallback = p =>
         {
-            string s = p.GetMessage();
-            Debug.Log(s);
-            string[] splitMove = s.Split(':');
-            if (splitMove[0] == "castle")
+            switch (p.type)
             {
-                Move move = new Move(int.Parse(splitMove[1]), int.Parse(splitMove[2])).Mirror();
-                Move rook = new Move(-1, int.Parse(splitMove[3])).Mirror();
-                boardState.TryExecuteCastling(move, rook.to, false);
+                case Packet.Type.Move:
+                {
+                    string[] splitMove = p.DataAsString().Split(':');
+                    Move move = new Move(Array.ConvertAll(splitMove, int.Parse)).Mirror();
+                    PlayTurn(move, false);
+                    UpdatePieces();
+                    break;
+                }
+                case Packet.Type.Castle:
+                {
+                    string[] splitMove = p.DataAsString().Split(':');
+                    Move move = new Move(Array.ConvertAll(splitMove.Take(2).ToArray(), int.Parse)).Mirror();
+                    Move rook = new Move(-1, int.Parse(splitMove[2])).Mirror();
+                    boardState.TryExecuteCastling(move, rook.to, false);
+                    UpdatePieces();
+                    break;
+                }
+                case Packet.Type.Color:
+                {
+                    Color color = p.DataAsColor();
+                    blacksMaterial.color = color;
+                    break;
+                }
             }
-            else
-            {
-                PlayTurn(new Move(Array.ConvertAll(splitMove, int.Parse)).Mirror(), false);
-            }
-            UpdatePieces();
         };
         
         isPlayingBlacks = FindObjectsOfType<Server>().Length <= 0;
+        whitesMaterial.color = isPlayingBlacks ? Color.black : Color.white;
+        blacksMaterial.color = isPlayingBlacks ? Color.white : Color.black;
+        colorPicker.color    = whitesMaterial.color;
 
         pieceLayerMask = 1 << LayerMask.NameToLayer("Piece");
         boardLayerMask = 1 << LayerMask.NameToLayer("Board");
@@ -343,6 +361,12 @@ public partial class ChessGameManager : MonoBehaviour
             UpdateAITurn();
         else
             UpdatePlayerTurn();
+
+        if (whitesMaterial.color != colorPicker.color)
+        {
+            whitesMaterial.color = colorPicker.color;
+            client.Send(new Packet(Packet.Type.Color, whitesMaterial.color));
+        }
     }
     #endregion
 
@@ -392,10 +416,7 @@ public partial class ChessGameManager : MonoBehaviour
         int crtPos = 0;
         foreach (BoardSquare square in boardState.squares)
         {
-            if (square.team == EChessTeam.White)
-                crtTeamPrefabs = isPlayingBlacks ? blackPiecesPrefab : whitePiecesPrefab;
-            else
-                crtTeamPrefabs = isPlayingBlacks ? whitePiecesPrefab : blackPiecesPrefab;
+            crtTeamPrefabs = square.team == EChessTeam.White ? whitePiecesPrefab : blackPiecesPrefab;
             
             if (square.piece != EPieceType.None)
             {
@@ -505,7 +526,6 @@ public partial class ChessGameManager : MonoBehaviour
         if (Physics.Raycast(ray, out hit, maxDistance, pieceLayerMask))
         {
             grabbed = hit.transform;
-            startPos = GetBoardPos(hit.transform.position);
         }
     }
 

@@ -350,8 +350,8 @@ public partial class ChessGameManager
                 if (isPlayer)
                 {
                     Client client  = FindObjectOfType<Client>();
-                    string message = "castle:" + move.from + ":" + move.to + ":" + rookSquareIndex;
-                    Packet packet = new Packet(message);
+                    string message = move.from + ":" + move.to + ":" + rookSquareIndex;
+                    Packet packet  = new Packet(Packet.Type.Castle, message);
                     client.SendDelayed(packet, 0.1f);
                 }
                 return true;

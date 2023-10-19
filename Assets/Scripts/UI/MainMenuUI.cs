@@ -27,8 +27,8 @@ public class MainMenuUI : MonoBehaviour
         client = FindObjectOfType<Client>();
         client.receiveCallback = p =>
         {
-            string s = p.GetMessage();
-            if (s != "ready") return; 
+            if (p.type != Packet.Type.Command) return;
+            if (p.DataAsString() != "ready") return;
             if (canStart) StartGame();
             else canStart = true;
         };
@@ -82,8 +82,10 @@ public class MainMenuUI : MonoBehaviour
     private void StartGame()
     {
         if (!client.isConnected) return;
+        SceneManager.LoadScene("MainScene");
+        return;
         if (server is not null && server.connectionCount < 2) return;
-        client.Send(new Packet("ready"));
+        client.Send(new Packet(Packet.Type.Command, "ready"));
         if (canStart) {
             SceneManager.LoadScene("MainScene");
         }
