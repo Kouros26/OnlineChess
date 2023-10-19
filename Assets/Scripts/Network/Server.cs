@@ -50,7 +50,7 @@ public class Server : MonoBehaviour
                 byte[] data = Receive(socket);
                 Packet newPacket = new Packet();
                 newPacket.Deserialize(data);
-                Debug.Log(new string(newPacket.GetMessage()));
+                Debug.Log(newPacket.GetMessage());
                 Debug.Log(newPacket.GetTimeStamp());
                 Debug.Log(newPacket.GetLatency());
 
@@ -121,8 +121,6 @@ public class Server : MonoBehaviour
 
     public void Close()
     {
-        //foreach (Socket socket in clientSockets)
-        //    Send(socket, "shutdown");
         listenSocket?.Close();
         listenSocket = null;
     }

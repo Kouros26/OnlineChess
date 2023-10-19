@@ -25,8 +25,9 @@ public class MainMenuUI : MonoBehaviour
     void Start()
     {
         client = FindObjectOfType<Client>();
-        client.receiveCallback = s =>
+        client.receiveCallback = p =>
         {
+            string s = p.GetMessage();
             if (s != "ready") return; 
             if (canStart) StartGame();
             else canStart = true;

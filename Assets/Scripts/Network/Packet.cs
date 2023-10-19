@@ -13,28 +13,14 @@ public class Packet
 {
     private char[] message = new char[60];
 
-    private int moveFrom;
-    private int moveTo;
-
     private float latency;
     private DateTime utcTimeStamp = new DateTime();
 
-    public Packet()
-    {
-
-    }
+    public Packet() { }
 
     public Packet(string message)
     {
         this.message = message.ToCharArray();
-    }
-
-    public Packet(int moveFrom, int moveTo)
-    {
-        this.moveFrom = moveFrom;
-        this.moveTo = moveTo;
-
-        utcTimeStamp = DateTime.UtcNow; // Used to evaluate size
     }
 
     public byte[] Serialize()
@@ -57,8 +43,6 @@ public class Packet
             Packet tempPacket = (Packet)formatter.Deserialize(stream);
 
             message = tempPacket.message;
-            moveFrom = tempPacket.moveFrom;
-            moveTo = tempPacket.moveTo;
             utcTimeStamp = tempPacket.utcTimeStamp;
         }
 
@@ -66,14 +50,9 @@ public class Packet
         latency = (float)(now - utcTimeStamp).TotalMilliseconds;
     }
 
-    public char[] GetMessage()
+    public string GetMessage()
     {
-        return message;
-    }
-
-    public int GetFrom()
-    {
-        return moveFrom;
+        return new string(message);
     }
 
     public float GetLatency()

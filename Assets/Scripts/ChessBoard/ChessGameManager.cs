@@ -291,8 +291,9 @@ public partial class ChessGameManager : MonoBehaviour
     void Start()
     {
         client = FindObjectOfType<Client>();
-        client.receiveCallback = s =>
+        client.receiveCallback = p =>
         {
+            string s = p.GetMessage();
             Debug.Log(s);
             string[] splitMove = s.Split(':');
             if (splitMove[0] == "castle")

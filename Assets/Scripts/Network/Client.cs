@@ -14,7 +14,7 @@ public class Client : MonoBehaviour
     private Socket    clientSocket = null;
     private IPAddress ipAddress    = null;
     public  bool      isConnected => clientSocket is not null && clientSocket.Connected;
-    public  Action<string> receiveCallback = null;
+    public  Action<Packet> receiveCallback = null;
 
     void Start()
     {
@@ -25,9 +25,16 @@ public class Client : MonoBehaviour
     private void Update()
     {
         if (!isConnected) return;
-        
-        if (clientSocket.Poll(100, SelectMode.SelectRead))
+
+        if (clientSocket.Poll(100, SelectMode.SelectRead)) 
+        {
+            if (clientSocket.Available <= 0) {
+                Close();
+                return;
+            }
+            
             Receive();
+        }
     }
 
     public void Connect()
@@ -76,14 +83,14 @@ public class Client : MonoBehaviour
         try
         {
             byte[] data = new byte[clientSocket.Available];
-            Packet newPacket = new Packet();
-            int byteCount = clientSocket.Receive(data);
-            newPacket.Deserialize(data);
-
+            clientSocket.Receive(data);
+            Packet packet = new Packet();
+            packet.Deserialize(data);
+            
             if (receiveCallback is not null)
-                receiveCallback(new string(newPacket.GetMessage()));
+                receiveCallback(packet);
 
-            return newPacket;
+            return packet;
         }
         catch (SocketException e)
         {
