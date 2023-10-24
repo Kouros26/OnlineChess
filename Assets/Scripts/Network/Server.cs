@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Net.Sockets;
 using UnityEngine;
+using UnityEngine.Purchasing;
 
 public class Server : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class Server : MonoBehaviour
     private IPAddress serverIP;
     
     private Socket       listenSocket = null;
+    private Socket       discoverySocket = null;
     private List<Socket> clientSockets = new();
     
     public int connectionCount => clientSockets.Count;
@@ -34,8 +36,11 @@ public class Server : MonoBehaviour
         
         // Open the server on that address.
         listenSocket = new Socket(serverIP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        listenSocket.Bind(new IPEndPoint(serverIP, serverPort));
+        listenSocket.Bind(new IPEndPoint(IPAddress.Any, serverPort));
         listenSocket.Listen(10);
+
+        discoverySocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        discoverySocket.Bind(new IPEndPoint(IPAddress.Any, serverPort + 1));
     }
 
     void Update()
@@ -49,13 +54,17 @@ public class Server : MonoBehaviour
             {
                 byte[] data = Receive(socket);
                 Packet newPacket = new Packet();
-                newPacket.Deserialize(data);
-                Debug.Log(newPacket.GetMessage());
-                Debug.Log(newPacket.GetTimeStamp());
-                Debug.Log(newPacket.GetLatency());
 
                 Redistribute(socket, data);
             }
+        }
+
+        if (discoverySocket.Poll(100, SelectMode.SelectRead))
+        {
+            EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+            byte[] data = new byte[1024];
+            int bytesRead = discoverySocket.ReceiveFrom(data, ref remoteEndPoint);
+            SendServerInfo(data, bytesRead, remoteEndPoint);
         }
     }
 
@@ -90,7 +99,22 @@ public class Server : MonoBehaviour
             return;
         }
     }
-    
+
+    public void SendServerInfo(byte[] data, int length, EndPoint sender)
+    {
+        string receivedData = Encoding.UTF8.GetString(data, 0, length);
+
+        IPEndPoint senderEndPoint = sender as IPEndPoint;
+
+        if (senderEndPoint == null) 
+            return;
+
+        string serverInfo = $"Server IP: {discoverySocket.LocalEndPoint} | Server Port: {((IPEndPoint)discoverySocket.LocalEndPoint).Port}";
+        byte[] responseData = Encoding.UTF8.GetBytes(serverInfo);
+
+        discoverySocket.SendTo(responseData, senderEndPoint);
+    }
+
     public void Redistribute(Socket sender, byte[] data)
     {
         foreach (Socket socket in clientSockets)
