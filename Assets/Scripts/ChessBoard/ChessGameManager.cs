@@ -315,6 +315,12 @@ public partial class ChessGameManager : MonoBehaviour
                     UpdatePieces();
                     break;
                 }
+                case Packet.Type.Message:
+                {
+                    string message = p.DataAsString();
+                    FindObjectOfType<ChatManager>().ReceiveMessage(message);
+                    break;
+                }
                 case Packet.Type.Color:
                 {
                     Color color = p.DataAsColor();

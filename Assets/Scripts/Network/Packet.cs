@@ -14,6 +14,7 @@ public class Packet
     public enum Type
     {
         Command,
+        Message,
         Move,
         Castle,
         Color,

@@ -27,10 +27,17 @@ public class MainMenuUI : MonoBehaviour
         client = FindObjectOfType<Client>();
         client.receiveCallback = p =>
         {
-            if (p.type != Packet.Type.Command) return;
-            if (p.DataAsString() != "ready") return;
-            if (canStart) StartGame();
-            else canStart = true;
+            if (p.type == Packet.Type.Command)
+            {
+                if (p.DataAsString() != "ready") return;
+                if (canStart) StartGame();
+                else canStart = true;
+            }
+            else if (p.type == Packet.Type.Message)
+            {
+                string message = p.DataAsString();
+                FindObjectOfType<ChatManager>().ReceiveMessage(message);
+            }
         };
         hostButtonText  = hostButton .GetComponentInChildren<TextMeshProUGUI>();
         startButtonText = startButton.GetComponentInChildren<TextMeshProUGUI>();
