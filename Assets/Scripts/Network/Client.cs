@@ -25,11 +25,10 @@ public class Client : MonoBehaviour
         receiveCallback = Debug.Log;
         DontDestroyOnLoad(gameObject);
 
-
         discoverySocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         discoverySocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
 
-        BroadCast(new Packet("test"), new IPEndPoint(GetBroadCastAddress(), serverListeningPort));
+        BroadCast(new Packet("test"), new IPEndPoint(IPAddress.Broadcast, serverListeningPort));
     }
 
     private void Update()
@@ -44,6 +43,16 @@ public class Client : MonoBehaviour
             }
             
             Receive();
+        }
+
+        if (discoverySocket.Poll(100, SelectMode.SelectRead))
+        {
+            byte[] serverData = new byte[discoverySocket.Available]; 
+            EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+            discoverySocket.ReceiveFrom(serverData, ref remoteEndPoint);
+            Packet packet = new Packet();
+            packet.Deserialize(serverData);
+            Debug.Log(packet.GetMessage());
         }
     }
 
@@ -128,18 +137,5 @@ public class Client : MonoBehaviour
             clientSocket.Shutdown(SocketShutdown.Both);
         clientSocket?.Close();
         clientSocket = null;
-    }
-
-    private IPAddress GetBroadCastAddress()
-    {
-        NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
-        IPInterfaceProperties adapterProperties = adapters[0].GetIPProperties();
-        UnicastIPAddressInformation information = adapterProperties.UnicastAddresses[0];
-
-        uint address = BitConverter.ToUInt32(information.Address.GetAddressBytes(), 0);
-        uint ipMaskV4 = BitConverter.ToUInt32(information.IPv4Mask.GetAddressBytes(), 0);
-        uint broadCastIpAddress = address | ~ipMaskV4;
-
-        return new IPAddress(BitConverter.GetBytes(broadCastIpAddress));
     }
 }

@@ -69,6 +69,9 @@ public class Server : MonoBehaviour
             EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
             byte[] data = new byte[1024];
             int bytesRead = discoverySocket.ReceiveFrom(data, ref remoteEndPoint);
+            Packet packet = new Packet();
+            packet.Deserialize(data);
+            Debug.Log(packet.GetMessage());
             SendServerInfo(data, bytesRead, remoteEndPoint);
         }
     }
@@ -107,17 +110,10 @@ public class Server : MonoBehaviour
 
     public void SendServerInfo(byte[] data, int length, EndPoint sender)
     {
-        string receivedData = Encoding.UTF8.GetString(data, 0, length);
-
-        IPEndPoint senderEndPoint = sender as IPEndPoint;
-
-        if (senderEndPoint == null) 
-            return;
-
         string serverInfo = $"Server IP: {discoverySocket.LocalEndPoint} | Server Port: {((IPEndPoint)discoverySocket.LocalEndPoint).Port}";
         byte[] responseData = Encoding.UTF8.GetBytes(serverInfo);
 
-        discoverySocket.SendTo(responseData, senderEndPoint);
+        discoverySocket.SendTo(responseData, sender);
     }
 
     public void Redistribute(Socket sender, byte[] data)
