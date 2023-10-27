@@ -10,6 +10,7 @@ using UnityEngine.UI;
 
 public class Client : MonoBehaviour
 {
+    [SerializeField] private MainMenuUI mainMenuUI;
     [SerializeField] public string serverIP   = "10.2.103.130";
     [SerializeField] public int    serverListeningPort = 11001;
     
@@ -27,32 +28,34 @@ public class Client : MonoBehaviour
 
         discoverySocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         discoverySocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
-
-        BroadCast(new Packet("test"), new IPEndPoint(IPAddress.Broadcast, serverListeningPort));
     }
 
     private void Update()
     {
-        if (!isConnected) return;
-
-        if (clientSocket.Poll(100, SelectMode.SelectRead)) 
+        if (isConnected)
         {
-            if (clientSocket.Available <= 0) {
-                Close();
-                return;
+            if (clientSocket.Poll(100, SelectMode.SelectRead))
+            {
+                if (clientSocket.Available <= 0)
+                {
+                    Close();
+                    return;
+                }
+
+                Receive();
             }
-            
-            Receive();
         }
 
         if (discoverySocket.Poll(100, SelectMode.SelectRead))
         {
-            byte[] serverData = new byte[discoverySocket.Available]; 
+            byte[] serverData = new byte[discoverySocket.Available];
             EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
             discoverySocket.ReceiveFrom(serverData, ref remoteEndPoint);
             Packet packet = new Packet();
             packet.Deserialize(serverData);
             Debug.Log(packet.GetMessage());
+            var splitted = packet.GetMessage().Split(' ');
+            mainMenuUI.CreateServerButton(IPAddress.Parse(splitted[0]), int.Parse(splitted[1]));
         }
     }
 
@@ -71,11 +74,13 @@ public class Client : MonoBehaviour
         Close();
     }
 
-    public void BroadCast(Packet packet, IPEndPoint endPoint)
+    public void BroadCast()
     {
         try
         {
-            discoverySocket.SendTo(packet.Serialize(), endPoint);
+            Packet packet = new Packet("broadcast");
+            IPEndPoint endpoint = new IPEndPoint(IPAddress.Broadcast, serverListeningPort);
+            discoverySocket.SendTo(packet.Serialize(), endpoint);
         }
         catch (SocketException e)
         {

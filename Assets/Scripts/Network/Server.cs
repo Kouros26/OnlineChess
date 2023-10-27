@@ -62,12 +62,12 @@ public class Server : MonoBehaviour
         if (discoverySocket.Poll(100, SelectMode.SelectRead))
         {
             EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-            byte[] data = new byte[1024];
+            byte[] data = new byte[discoverySocket.Available];
             int bytesRead = discoverySocket.ReceiveFrom(data, ref remoteEndPoint);
             Packet packet = new Packet();
             packet.Deserialize(data);
             Debug.Log(packet.GetMessage());
-            SendServerInfo(data, bytesRead, remoteEndPoint);
+            SendServerInfo(remoteEndPoint);
         }
     }
 
@@ -103,12 +103,10 @@ public class Server : MonoBehaviour
         }
     }
 
-    public void SendServerInfo(byte[] data, int length, EndPoint sender)
+    public void SendServerInfo(EndPoint sender)
     {
-        string serverInfo = $"Server IP: {discoverySocket.LocalEndPoint} | Server Port: {((IPEndPoint)discoverySocket.LocalEndPoint).Port}";
-        byte[] responseData = Encoding.UTF8.GetBytes(serverInfo);
-
-        discoverySocket.SendTo(responseData, sender);
+        Packet infoPacket = new Packet(serverIP + " " + serverPort);
+        discoverySocket.SendTo(infoPacket.Serialize(), sender);
     }
 
     public void Redistribute(Socket sender, byte[] data)
