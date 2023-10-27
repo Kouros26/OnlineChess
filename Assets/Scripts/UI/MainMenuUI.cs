@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
@@ -11,14 +12,16 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
     [SerializeField] private Button startButton;
-    [SerializeField] private TMP_InputField addressInput;
+    [SerializeField] private Button serverButton;
     [SerializeField] private TextMeshProUGUI popup;
     [SerializeField] private GameObject serverPrefab;
     [SerializeField] private ChatManager chatManager;
     
     private TextMeshProUGUI hostButtonText;
     private TextMeshProUGUI startButtonText;
-    
+    private TextMeshProUGUI serverText;
+    private ServerInfo serverInfo = null;
+
     private Server server = null;
     private Client client = null;
     private bool   canStart = false;
@@ -43,9 +46,11 @@ public class MainMenuUI : MonoBehaviour
         };
         hostButtonText  = hostButton .GetComponentInChildren<TextMeshProUGUI>();
         startButtonText = startButton.GetComponentInChildren<TextMeshProUGUI>();
+        serverText = serverButton .GetComponentInChildren<TextMeshProUGUI>();
         hostButton .onClick.AddListener(Host);
         joinButton .onClick.AddListener(Join);
         startButton.onClick.AddListener(StartGame);
+        startButton.interactable = false;
     }
 
     private void Update()
@@ -62,7 +67,6 @@ public class MainMenuUI : MonoBehaviour
             Destroy(server.gameObject);
             server = null;
             hostButtonText.text = "Host Server";
-            addressInput.interactable = true;
             joinButton.interactable = true;
         }
         else
@@ -71,8 +75,6 @@ public class MainMenuUI : MonoBehaviour
             client.serverIP = server.GetAddress();
             client.Connect();
             hostButtonText.text = "Close Server";
-            addressInput.text = server.GetAddress();
-            addressInput.interactable = false;
             joinButton.interactable = false;
             
         }
@@ -80,12 +82,8 @@ public class MainMenuUI : MonoBehaviour
 
     private void Join()
     {
-        string address = addressInput.text;
-        if (address == "" || address.Split('.').Length != 4) return;
         if (server is not null) Destroy(server.gameObject);
-        client.serverIP = address;
-        client.Connect();
-        popup.text = "Connected to server!";
+        client.BroadCast();
     }
 
     private void StartGame()
@@ -102,4 +100,35 @@ public class MainMenuUI : MonoBehaviour
             startButton.interactable = false;
         }
     }
+
+    public void CreateServerButton(IPAddress address, int port)
+    {
+        serverInfo = new ServerInfo(address, port);
+        serverText.text = address.ToString();
+    }
+
+    public void OnServerClick()
+    {
+        if (serverInfo == null)
+            return;
+
+        client.serverIP = serverInfo.address.ToString();
+        client.Connect();
+        startButton.interactable = true;
+        popup.text = "Connected to server";
+    }
 }
+
+public class ServerInfo
+{
+    public ServerInfo(IPAddress address, int port)
+    {
+        this.address = address;
+        this.port = port;
+    }
+
+    public IPAddress address;
+    public int port;
+}
+
+
