@@ -45,12 +45,12 @@ public class Server : MonoBehaviour
 
     void Update()
     {
-        if (listenSocket.Poll(100, SelectMode.SelectRead))
+        if (listenSocket.Poll(0, SelectMode.SelectRead))
             Accept();
 
         foreach (Socket socket in clientSockets)
         {
-            if (socket.Poll(100, SelectMode.SelectRead))
+            if (socket.Poll(0, SelectMode.SelectRead))
             {
                 if (socket.Available <= 0) {
                     socket.Close();
@@ -63,14 +63,11 @@ public class Server : MonoBehaviour
             }
         }
 
-        if (discoverySocket.Poll(100, SelectMode.SelectRead))
+        if (discoverySocket.Poll(0, SelectMode.SelectRead))
         {
             EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
             byte[] data = new byte[discoverySocket.Available];
-            int bytesRead = discoverySocket.ReceiveFrom(data, ref remoteEndPoint);
-            Packet packet = new Packet();
-            packet.Deserialize(data);
-            Debug.Log(packet.DataAsString());
+            discoverySocket.ReceiveFrom(data, ref remoteEndPoint);
             SendServerInfo(remoteEndPoint);
         }
     }

@@ -71,7 +71,6 @@ public class ChatManager : MonoBehaviour
         messages.Add(message);
         UpdateLogDisplay(message);
         client.Send(new Packet(Packet.Type.Message, text));
-        Debug.Log("Sent message: " + text);
     }
 
     public void ReceiveMessage(string text)
@@ -79,6 +78,5 @@ public class ChatManager : MonoBehaviour
         ChatMessage message = new(text, true);
         messages.Add(message);
         UpdateLogDisplay(message);
-        Debug.Log("Received message: " + text);
     }
 }
