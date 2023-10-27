@@ -12,6 +12,7 @@ public class Client : MonoBehaviour
 {
     [SerializeField] private MainMenuUI mainMenuUI;
     [SerializeField] public string serverIP   = "10.2.103.130";
+    [SerializeField] public int serverPort = 11000;
     [SerializeField] public int    serverListeningPort = 11001;
     
     private Socket    clientSocket = null;
@@ -66,7 +67,7 @@ public class Client : MonoBehaviour
         
         ipAddress    = IPAddress.Parse(serverIP);
         clientSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        //clientSocket.Connect(ipAddress, serverPort);
+        clientSocket.Connect(ipAddress, serverPort);
     }
 
     private void OnDestroy()
