@@ -77,7 +77,7 @@ public class Client : MonoBehaviour
                 EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
                 discoverySocket.ReceiveFrom(serverData, ref remoteEndPoint);
                 Packet receivePacket = new Packet();
-                packet.Deserialize(serverData);
+                receivePacket.Deserialize(serverData);
                 Debug.Log(receivePacket.GetMessage());
                 var splitted = receivePacket.GetMessage().Split(' ');
                 mainMenuUI.CreateServerButton(IPAddress.Parse(splitted[0]), int.Parse(splitted[1]));
