@@ -59,7 +59,6 @@ public class Server : MonoBehaviour
                 }
                 
                 byte[] data = Receive(socket);
-
                 Redistribute(socket, data);
             }
         }
@@ -145,5 +144,8 @@ public class Server : MonoBehaviour
     {
         listenSocket?.Close();
         listenSocket = null;
+
+        discoverySocket?.Close();
+        discoverySocket = null;
     }
 }
