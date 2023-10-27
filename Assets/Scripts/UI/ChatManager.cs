@@ -65,7 +65,7 @@ public class ChatManager : MonoBehaviour
         messageTransforms.Add(newDisplay.transform);
     }
 
-    public void SendMessage(string text)
+    public new void SendMessage(string text)
     {
         ChatMessage message = new(text, false);
         messages.Add(message);

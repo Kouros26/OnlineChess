@@ -28,14 +28,7 @@ public class MainMenuUI : MonoBehaviour
         client = FindObjectOfType<Client>();
         client.receiveCallback = p =>
         {
-            if (p.type == Packet.Type.Command)
-            {
-                if (p.DataAsString() != "ready") return;
-                if (canStart) StartGame();
-                else canStart = true;
-                chatManager.ReceiveMessage("Ready to start");
-            }
-            else if (p.type == Packet.Type.Message)
+            if (p.type == Packet.Type.Message)
             {
                 string message = p.DataAsString();
                 chatManager.ReceiveMessage(message);

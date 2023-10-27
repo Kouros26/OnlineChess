@@ -70,7 +70,7 @@ public class Server : MonoBehaviour
             int bytesRead = discoverySocket.ReceiveFrom(data, ref remoteEndPoint);
             Packet packet = new Packet();
             packet.Deserialize(data);
-            Debug.Log(packet.GetMessage());
+            Debug.Log(packet.DataAsString());
             SendServerInfo(remoteEndPoint);
         }
     }
@@ -109,7 +109,7 @@ public class Server : MonoBehaviour
 
     public void SendServerInfo(EndPoint sender)
     {
-        Packet infoPacket = new Packet(serverIP + " " + serverPort);
+        Packet infoPacket = new Packet(Packet.Type.Command, serverIP + " " + serverPort);
         discoverySocket.SendTo(infoPacket.Serialize(), sender);
     }
 

@@ -67,7 +67,7 @@ public class Client : MonoBehaviour
     {
         try
         {
-            Packet packet = new Packet("broadcast");
+            Packet packet = new Packet(Packet.Type.Command,"broadcast");
             IPEndPoint endpoint = new IPEndPoint(IPAddress.Broadcast, serverListeningPort);
             discoverySocket.SendTo(packet.Serialize(), endpoint);
 
@@ -78,8 +78,7 @@ public class Client : MonoBehaviour
                 discoverySocket.ReceiveFrom(serverData, ref remoteEndPoint);
                 Packet receivePacket = new Packet();
                 receivePacket.Deserialize(serverData);
-                Debug.Log(receivePacket.GetMessage());
-                var splitted = receivePacket.GetMessage().Split(' ');
+                var splitted = receivePacket.DataAsString().Split(' ');
                 mainMenuUI.CreateServerButton(IPAddress.Parse(splitted[0]), int.Parse(splitted[1]));
             }
         }
