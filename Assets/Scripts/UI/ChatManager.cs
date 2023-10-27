@@ -31,7 +31,6 @@ public class ChatManager : MonoBehaviour
     void Start()
     {
         client = FindObjectOfType<Client>();
-        DontDestroyOnLoad(gameObject);
 
         foreach (ChatMessage message in messages) {
             UpdateLogDisplay(message);

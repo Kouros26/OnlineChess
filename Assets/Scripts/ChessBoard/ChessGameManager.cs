@@ -38,6 +38,7 @@ public partial class ChessGameManager : MonoBehaviour
     [SerializeField] private Material whitesMaterial;
     [SerializeField] private Material blacksMaterial;
     [SerializeField] private ColorPicker colorPicker;
+    [SerializeField] private ChatManager chatManager;
     private Client client;
     private bool isPlayingBlacks = false;
 
@@ -298,6 +299,17 @@ public partial class ChessGameManager : MonoBehaviour
         {
             switch (p.type)
             {
+                case Packet.Type.Command:
+                {
+                    Debug.Log(p.DataAsString());
+                    break;
+                }
+                case Packet.Type.Message:
+                {
+                    string message = p.DataAsString();
+                    chatManager.ReceiveMessage(message);
+                    break;
+                }
                 case Packet.Type.Move:
                 {
                     string[] splitMove = p.DataAsString().Split(':');
@@ -313,12 +325,6 @@ public partial class ChessGameManager : MonoBehaviour
                     Move rook = new Move(-1, int.Parse(splitMove[2])).Mirror();
                     boardState.TryExecuteCastling(move, rook.to, false);
                     UpdatePieces();
-                    break;
-                }
-                case Packet.Type.Message:
-                {
-                    string message = p.DataAsString();
-                    FindObjectOfType<ChatManager>().ReceiveMessage(message);
                     break;
                 }
                 case Packet.Type.Color:
@@ -532,6 +538,7 @@ public partial class ChessGameManager : MonoBehaviour
         if (Physics.Raycast(ray, out hit, maxDistance, pieceLayerMask))
         {
             grabbed = hit.transform;
+            startPos = GetBoardPos(grabbed.root.position);
         }
     }
 

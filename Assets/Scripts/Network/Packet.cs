@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization;
@@ -20,61 +21,33 @@ public class Packet
         Color,
     }
     
-    public Type       type         { get; private set; }
+    public Type       type         { get { if (data is null || data.Length <= 0) return Type.Command; return (Type)data[0]; } }
     public byte[]     data         { get; private set; }
     public float      latency      { get; private set; }
     public DateTime   utcTimeStamp { get; private set; }
 
     public Packet() { }
 
-    public Packet(Type _type, byte[] _data)
+    public Packet(Type type, byte[] bytes)
     {
-        type = _type;
-        data = _data;
+        data = new byte[bytes.Length+1];
+        data[0] = (byte)type;
+        Buffer.BlockCopy(bytes, 0, data, 1, bytes.Length);
     }
 
-    public Packet(Type _type, string message)
-    {
-        type = _type;
-        data = ByteConverter.FromString(message);
-    }
+    public Packet(Type type, string message) : this(type, ByteConverter.FromString(message)) { }
+    public Packet(Type type, float num)      : this(type, ByteConverter.FromFloat(num)) { }
+    public Packet(Type type, Vector2 vec)    : this(type, ByteConverter.FromVector2(vec)) { }
+    public Packet(Type type, Vector3 vec)    : this(type, ByteConverter.FromVector3(vec)) { }
+    public Packet(Type type, Vector4 vec)    : this(type, ByteConverter.FromVector4(vec)) { }
+    public Packet(Type type, Color col)      : this(type, ByteConverter.FromColor(col)) { }
 
-    public Packet(Type _type, float _data)
-    {
-        type = _type;
-        data = ByteConverter.FromFloat(_data);
-    }
-
-    public Packet(Type _type, Vector2 _data)
-    {
-        type = _type;
-        data = ByteConverter.FromVector2(_data);
-    }
-
-    public Packet(Type _type, Vector3 _data)
-    {
-        type = _type;
-        data = ByteConverter.FromVector3(_data);
-    }
-
-    public Packet(Type _type, Vector4 _data)
-    {
-        type = _type;
-        data = ByteConverter.FromVector4(_data);
-    }
-
-    public Packet(Type _type, Color _data)
-    {
-        type = _type;
-        data = ByteConverter.FromColor(_data);
-    }
-
-    public string  DataAsString()  { return ByteConverter.ToString (data); }
-    public float   DataAsFloat()   { return ByteConverter.ToFloat  (data); }
-    public Vector2 DataAsVector2() { return ByteConverter.ToVector2(data); }
-    public Vector3 DataAsVector3() { return ByteConverter.ToVector3(data); }
-    public Vector4 DataAsVector4() { return ByteConverter.ToVector4(data); }
-    public Color   DataAsColor()   { return ByteConverter.ToColor  (data); }
+    public string  DataAsString()  { return ByteConverter.ToString (data.Skip(1).ToArray()); }
+    public float   DataAsFloat()   { return ByteConverter.ToFloat  (data.Skip(1).ToArray()); }
+    public Vector2 DataAsVector2() { return ByteConverter.ToVector2(data.Skip(1).ToArray()); }
+    public Vector3 DataAsVector3() { return ByteConverter.ToVector3(data.Skip(1).ToArray()); }
+    public Vector4 DataAsVector4() { return ByteConverter.ToVector4(data.Skip(1).ToArray()); }
+    public Color   DataAsColor()   { return ByteConverter.ToColor  (data.Skip(1).ToArray()); }
 
     public byte[] Serialize()
     {

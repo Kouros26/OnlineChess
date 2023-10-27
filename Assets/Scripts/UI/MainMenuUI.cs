@@ -14,6 +14,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private TMP_InputField addressInput;
     [SerializeField] private TextMeshProUGUI popup;
     [SerializeField] private GameObject serverPrefab;
+    [SerializeField] private ChatManager chatManager;
     
     private TextMeshProUGUI hostButtonText;
     private TextMeshProUGUI startButtonText;
@@ -32,11 +33,12 @@ public class MainMenuUI : MonoBehaviour
                 if (p.DataAsString() != "ready") return;
                 if (canStart) StartGame();
                 else canStart = true;
+                chatManager.ReceiveMessage("Ready to start");
             }
             else if (p.type == Packet.Type.Message)
             {
                 string message = p.DataAsString();
-                FindObjectOfType<ChatManager>().ReceiveMessage(message);
+                chatManager.ReceiveMessage(message);
             }
         };
         hostButtonText  = hostButton .GetComponentInChildren<TextMeshProUGUI>();
@@ -89,8 +91,6 @@ public class MainMenuUI : MonoBehaviour
     private void StartGame()
     {
         if (!client.isConnected) return;
-        SceneManager.LoadScene("MainScene");
-        return;
         if (server is not null && server.connectionCount < 2) return;
         client.Send(new Packet(Packet.Type.Command, "ready"));
         if (canStart) {

@@ -16,7 +16,7 @@ public class Client : MonoBehaviour
     public  bool      isConnected => clientSocket is not null && clientSocket.Connected;
     public  Action<Packet> receiveCallback = null;
 
-    void Start()
+    void Awake()
     {
         receiveCallback = Debug.Log;
         DontDestroyOnLoad(gameObject);
