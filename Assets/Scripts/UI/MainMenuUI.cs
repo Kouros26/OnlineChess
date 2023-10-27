@@ -88,6 +88,7 @@ public class MainMenuUI : MonoBehaviour
         else {
             canStart = true;
             startButtonText.text = "Waiting for opponent";
+            serverButton.interactable = false;
             startButton.interactable = false;
         }
     }

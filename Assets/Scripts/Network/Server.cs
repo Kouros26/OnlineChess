@@ -53,8 +53,6 @@ public class Server : MonoBehaviour
             if (socket.Poll(100, SelectMode.SelectRead))
             {
                 byte[] data = Receive(socket);
-                Packet newPacket = new Packet();
-
                 Redistribute(socket, data);
             }
         }
@@ -141,5 +139,8 @@ public class Server : MonoBehaviour
     {
         listenSocket?.Close();
         listenSocket = null;
+
+        discoverySocket?.Close();
+        discoverySocket = null;
     }
 }
