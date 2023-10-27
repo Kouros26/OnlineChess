@@ -11,20 +11,17 @@ public class MainMenuUI : MonoBehaviour
 {
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
-    [SerializeField] private Button startButton;
     [SerializeField] private Button serverButton;
     [SerializeField] private TextMeshProUGUI popup;
     [SerializeField] private GameObject serverPrefab;
     [SerializeField] private ChatManager chatManager;
     
     private TextMeshProUGUI hostButtonText;
-    private TextMeshProUGUI startButtonText;
     private TextMeshProUGUI serverText;
     private ServerInfo serverInfo = null;
 
     private Server server = null;
     private Client client = null;
-    private bool   canStart = false;
     
     void Start()
     {
@@ -45,19 +42,22 @@ public class MainMenuUI : MonoBehaviour
             }
         };
         hostButtonText  = hostButton .GetComponentInChildren<TextMeshProUGUI>();
-        startButtonText = startButton.GetComponentInChildren<TextMeshProUGUI>();
         serverText = serverButton .GetComponentInChildren<TextMeshProUGUI>();
         hostButton .onClick.AddListener(Host);
         joinButton .onClick.AddListener(Join);
-        startButton.onClick.AddListener(StartGame);
-        startButton.interactable = false;
     }
 
     private void Update()
     {
         popup.enabled = server is not null || (server is null && client.isConnected);
         if (server is not null)
+        {
             popup.text = server.connectionCount + " player" + (server.connectionCount > 1 ? "s" : "") + " connected!";
+            
+            if (server.connectionCount == 2)
+                SceneManager.LoadScene("MainScene");
+        }
+
     }
 
     private void Host()
@@ -86,22 +86,6 @@ public class MainMenuUI : MonoBehaviour
         client.BroadCast();
     }
 
-    private void StartGame()
-    {
-        if (!client.isConnected) return;
-        if (server is not null && server.connectionCount < 2) return;
-        client.Send(new Packet(Packet.Type.Command, "ready"));
-        if (canStart) {
-            SceneManager.LoadScene("MainScene");
-        }
-        else {
-            canStart = true;
-            startButtonText.text = "Waiting for opponent";
-            serverButton.interactable = false;
-            startButton.interactable = false;
-        }
-    }
-
     public void CreateServerButton(IPAddress address, int port)
     {
         serverInfo = new ServerInfo(address, port);
@@ -115,8 +99,8 @@ public class MainMenuUI : MonoBehaviour
 
         client.serverIP = serverInfo.address.ToString();
         client.Connect();
-        startButton.interactable = true;
         popup.text = "Connected to server";
+        SceneManager.LoadScene("MainScene");
     }
 }
 

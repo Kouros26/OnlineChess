@@ -20,7 +20,7 @@ public class Client : MonoBehaviour
 
     private IPAddress ipAddress    = null;
     public  bool      isConnected => clientSocket is not null && clientSocket.Connected;
-    public  Action<Packet> receiveCallback = null;
+    public Action<Packet> receiveCallback = null;
 
     void Awake()
     {
@@ -35,7 +35,7 @@ public class Client : MonoBehaviour
     {
         if (isConnected)
         {
-            if (clientSocket.Poll(100, SelectMode.SelectRead))
+            if (clientSocket.Poll(0, SelectMode.SelectRead))
             {
                 if (clientSocket.Available <= 0)
                 {
@@ -45,18 +45,6 @@ public class Client : MonoBehaviour
 
                 Receive();
             }
-        }
-
-        if (discoverySocket.Poll(100, SelectMode.SelectRead))
-        {
-            byte[] serverData = new byte[discoverySocket.Available];
-            EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-            discoverySocket.ReceiveFrom(serverData, ref remoteEndPoint);
-            Packet packet = new Packet();
-            packet.Deserialize(serverData);
-            Debug.Log(packet.GetMessage());
-            var splitted = packet.GetMessage().Split(' ');
-            mainMenuUI.CreateServerButton(IPAddress.Parse(splitted[0]), int.Parse(splitted[1]));
         }
     }
 
@@ -82,6 +70,18 @@ public class Client : MonoBehaviour
             Packet packet = new Packet("broadcast");
             IPEndPoint endpoint = new IPEndPoint(IPAddress.Broadcast, serverListeningPort);
             discoverySocket.SendTo(packet.Serialize(), endpoint);
+
+            if (discoverySocket.Poll(1000000, SelectMode.SelectRead))
+            {
+                byte[] serverData = new byte[discoverySocket.Available];
+                EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                discoverySocket.ReceiveFrom(serverData, ref remoteEndPoint);
+                Packet receivePacket = new Packet();
+                packet.Deserialize(serverData);
+                Debug.Log(receivePacket.GetMessage());
+                var splitted = receivePacket.GetMessage().Split(' ');
+                mainMenuUI.CreateServerButton(IPAddress.Parse(splitted[0]), int.Parse(splitted[1]));
+            }
         }
         catch (SocketException e)
         {
@@ -124,9 +124,11 @@ public class Client : MonoBehaviour
             clientSocket.Receive(data);
             Packet packet = new Packet();
             packet.Deserialize(data);
-            
-            if (receiveCallback is not null)
+
+            if (receiveCallback != null)
+            {
                 receiveCallback(packet);
+            }
 
             return packet;
         }
